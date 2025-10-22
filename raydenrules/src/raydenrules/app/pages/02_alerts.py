@@ -1,134 +1,270 @@
 """
-Alerts Page - Create and manage climate alerts
+Alerts Management - Configure and monitor climate risk threshold notifications
 """
 
-from datetime import datetime
+import os
+import sys
 
 import pandas as pd
 import streamlit as st
 
-# Page title
-st.title("Climate Alerts")
+# Set up path for imports
+current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(current_dir)
+
+from theme import apply_terminal_theme  # noqa: E402
+
+# Apply terminal theme
+apply_terminal_theme()
+
+# Page header with terminal styling
+st.markdown(
+    """
+    <div style="background-color: #0a0a0a; padding: 10px; border: 1px solid #00FF00; margin-bottom: 20px;">
+        <h1 style="color: #00FF00; font-family: 'Courier New', monospace; margin: 0;">
+            <span style="color: #7FFFD4;">> </span>RISK ALERT MANAGEMENT
+        </h1>
+        <p style="color: #7FFFD4; font-family: 'Courier New', monospace; margin: 0; font-size: 0.9em;">
+            Configure threshold-based notifications for climate risk factors
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Add custom styling for table text - changing text color to black for better visibility
+st.markdown(
+    """
+    <style>
+    /* Overriding table text color to black for better visibility */
+    .stDataFrame td, .stDataFrame th, .dataframe td, .dataframe th {
+        color: #000000 !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # Mock existing alerts data
 existing_alerts = [
     {
         "id": "alert-001",
-        "name": "NYC Heatwave Alert",
+        "name": "NYC Heatwave Risk Monitor",
         "region_id": "NYC001",
         "rule": "heatwave_flag >= 1 for 3 days",
         "channel": "email",
-        "recipients": "alerts@example.com",
-        "status": "active",
+        "recipients": "risk-team@example.com",
+        "status": "ACTIVE",
+        "severity": "HIGH",
     },
     {
         "id": "alert-002",
-        "name": "UHI Critical Level",
+        "name": "Urban Heat Index Threshold",
         "region_id": "NYC001",
         "rule": "uhi_index > 4.5",
         "channel": "slack",
-        "recipients": "#climate-alerts",
-        "status": "active",
+        "recipients": "#climate-risk",
+        "status": "ACTIVE",
+        "severity": "CRITICAL",
     },
 ]
 
-# Display existing alerts
-st.subheader("Existing Alerts")
+# Display existing alerts with terminal styling
+st.markdown(
+    """
+    <div style="font-family: 'Courier New', monospace; margin: 20px 0 10px 0;">
+        <span style="color: #7FFFD4;">>></span>
+        <span style="color: #00FF00; font-weight: bold;"> CONFIGURED ALERTS</span>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 if existing_alerts:
     alerts_df = pd.DataFrame(existing_alerts)
+
+    # Add styling header
+    st.markdown(
+        """
+        <div style="background-color: #0a0a0a; padding: 5px; border-top: 1px solid #00FF00; border-left: 1px solid #00FF00; border-right: 1px solid #00FF00;">
+            <p style="color: #7FFFD4; font-family: 'Courier New', monospace; text-align: center; margin: 0;">
+                ACTIVE MONITORING ALERTS
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     st.dataframe(
         alerts_df,
         column_config={
-            "id": "ID",
-            "name": "Alert Name",
-            "region_id": "Region",
-            "rule": "Rule",
-            "channel": "Channel",
-            "recipients": "Recipients",
-            "status": "Status",
+            "id": "ALERT ID",
+            "name": "DESCRIPTION",
+            "region_id": "MARKET",
+            "rule": "THRESHOLD RULE",
+            "channel": "NOTIFICATION METHOD",
+            "recipients": "RECIPIENTS",
+            "status": "STATUS",
+            "severity": "RISK LEVEL",
         },
         use_container_width=True,
     )
 
-    # Select alert to edit or delete
+    # Select alert to edit or delete - with terminal styling
+    st.markdown(
+        """
+        <div style="background-color: #0a0a0a; padding: 5px; margin-top: 15px; border: 1px solid #00FF00;">
+            <p style="color: #7FFFD4; font-family: 'Courier New', monospace; margin: 0; font-size: 0.9em;">
+                ALERT MANAGEMENT
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     selected_alert = st.selectbox(
-        "Select an alert to edit or delete:",
-        ["None"] + [alert["name"] for alert in existing_alerts],
+        "SELECT ALERT TO MANAGE:",
+        ["NONE"] + [alert["name"] for alert in existing_alerts],
     )
 else:
-    st.info("No alerts configured yet.")
-    selected_alert = "None"
+    st.info("NO ALERTS CONFIGURED")
+    selected_alert = "NONE"
 
-# Create new alert form
-st.subheader("Create New Alert")
+# Create new alert form with terminal styling
+st.markdown(
+    """
+    <div style="font-family: 'Courier New', monospace; margin: 20px 0 10px 0;">
+        <span style="color: #7FFFD4;">>></span>
+        <span style="color: #00FF00; font-weight: bold;"> CREATE NEW RISK ALERT</span>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Terminal-styled form container
+st.markdown(
+    """
+    <div style="background-color: #0a0a0a; padding: 5px; border-top: 1px solid #00FF00; border-left: 1px solid #00FF00; border-right: 1px solid #00FF00;">
+        <p style="color: #7FFFD4; font-family: 'Courier New', monospace; text-align: center; margin: 0;">
+            ALERT CONFIGURATION TERMINAL
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 with st.form("create_alert_form"):
     # Basic alert information
-    alert_name = st.text_input("Alert Name")
+    alert_name = st.text_input("ALERT NAME")
 
     # Region selector
     regions = ["New York City", "Los Angeles", "Chicago", "Miami"]
-    selected_region = st.selectbox("Select Region", regions)
+    selected_region = st.selectbox("SELECT MARKET", regions)
 
     # Rule configuration
-    st.subheader("Rule Configuration")
-    metric_options = ["lst_mean_c", "heatwave_flag", "uhi_index", "anomaly_zscore", "cdd"]
-    selected_metric = st.selectbox("Select Metric", metric_options)
+    st.markdown(
+        """
+        <div style="font-family: 'Courier New', monospace; margin: 10px 0 5px 0;">
+            <span style="color: #7FFFD4;">></span>
+            <span style="color: #00FF00;"> RULE CONFIGURATION</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    metric_options = {
+        "lst_mean_c": "Surface Temperature (°C)",
+        "heatwave_flag": "Heatwave Flag",
+        "uhi_index": "Urban Heat Index",
+        "anomaly_zscore": "Anomaly Z-Score",
+        "cdd": "Cooling Degree Days",
+    }
+
+    selected_metric_name = st.selectbox("SELECT METRIC", list(metric_options.values()))
+    selected_metric = list(metric_options.keys())[
+        list(metric_options.values()).index(selected_metric_name)
+    ]
 
     col1, col2 = st.columns(2)
     with col1:
-        condition = st.selectbox("Condition", [">=", ">", "=", "<", "<="])
+        condition = st.selectbox("CONDITION", [">=", ">", "=", "<", "<="])
     with col2:
-        threshold = st.number_input("Threshold", value=1.0)
+        threshold = st.number_input("THRESHOLD VALUE", value=1.0)
 
-    duration = st.slider("Duration (days)", 1, 7, 1)
+    duration = st.slider("DURATION (DAYS)", 1, 7, 1)
+
+    # Risk level selector
+    severity = st.selectbox("RISK LEVEL", ["LOW", "MEDIUM", "HIGH", "CRITICAL"])
 
     rule_preview = (
         f"{selected_metric} {condition} {threshold} for {duration} day{'s' if duration > 1 else ''}"
     )
-    st.info(f"Rule: {rule_preview}")
+
+    st.markdown(
+        f"""
+        <div style="background-color: #0a0a0a; padding: 8px; border: 1px solid #00FF00; margin: 10px 0;">
+            <p style="color: #7FFFD4; font-family: 'Courier New', monospace; margin: 0; font-size: 0.9em;">
+                RULE PREVIEW: <span style="color: #00FF00;">{rule_preview}</span>
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     # Notification channel
-    st.subheader("Notification")
-    channel = st.selectbox("Notification Channel", ["Email", "Slack", "Webhook"])
+    st.markdown(
+        """
+        <div style="font-family: 'Courier New', monospace; margin: 10px 0 5px 0;">
+            <span style="color: #7FFFD4;">></span>
+            <span style="color: #00FF00;"> NOTIFICATION SETTINGS</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    if channel == "Email":
-        recipients = st.text_input("Email Addresses (comma-separated)")
-    elif channel == "Slack":
-        recipients = st.text_input("Slack Channel (e.g., #climate-alerts)")
+    channel = st.selectbox("NOTIFICATION METHOD", ["EMAIL", "SLACK", "WEBHOOK"])
+
+    if channel == "EMAIL":
+        recipients = st.text_input("EMAIL ADDRESSES (comma-separated)")
+    elif channel == "SLACK":
+        recipients = st.text_input("SLACK CHANNEL (e.g., #climate-risk)")
     else:  # Webhook
-        recipients = st.text_input("Webhook URL")
+        recipients = st.text_input("WEBHOOK URL")
 
-    # Test and submit
-    col1, col2 = st.columns(2)
-    with col1:
-        test_button = st.form_submit_button("Test Alert")
-    with col2:
-        submit_button = st.form_submit_button("Create Alert")
+    # Submit button
+    submit = st.form_submit_button("CREATE ALERT")
 
-if test_button:
-    st.success("Alert test successful! A notification was sent via the selected channel.")
+if submit:
+    st.success("✓ ALERT CONFIGURATION COMPLETE")
 
-if submit_button:
-    if alert_name and selected_region and recipients:
-        st.success(f"Alert '{alert_name}' created successfully!")
-        st.json(
-            {
-                "name": alert_name,
-                "region": selected_region,
-                "rule": rule_preview,
-                "channel": channel.lower(),
-                "recipients": recipients,
-                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            }
-        )
-    else:
-        st.error("Please fill in all required fields.")
+    # Display a preview of the created alert with terminal styling
+    st.markdown(
+        f"""
+        <div style="background-color: #0a0a0a; padding: 10px; border: 1px solid #00FF00; margin: 10px 0;">
+            <p style="color: #7FFFD4; font-family: 'Courier New', monospace; margin: 0; font-size: 0.9em;">
+                ALERT CREATED:
+            </p>
+            <div style="font-family: 'Courier New', monospace; margin: 5px 0; color: #00FF00;">
+                NAME: {alert_name}<br>
+                MARKET: {selected_region}<br>
+                RULE: {rule_preview}<br>
+                RISK LEVEL: <span style="color: {'#00FF00' if severity == 'LOW' else '#FFFF00' if severity == 'MEDIUM' else '#FFA500' if severity == 'HIGH' else '#FF0000'}">{severity}</span><br>
+                NOTIFICATION: {channel} to {recipients}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-# Delete section (only shown when an alert is selected)
-if selected_alert != "None":
-    st.subheader("Delete Alert")
-    st.warning(f"Are you sure you want to delete the alert '{selected_alert}'?")
-    if st.button("Delete Alert"):
-        st.success(f"Alert '{selected_alert}' deleted successfully!")
+# App footer
+st.markdown("---")
+st.markdown(
+    """
+    <div style="text-align: center;">
+        <p style="color: #7FFFD4; font-family: 'Courier New', monospace; font-size: 0.8em;">
+            RAYDEN RULES™ | CLIMATE RISK INTELLIGENCE PLATFORM | © 2025 | VERSION 0.0.0
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)

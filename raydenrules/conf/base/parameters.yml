@@ -1,0 +1,48 @@
+# Parameters for the Rayden Rules project
+# These values can be overridden in conf/local/parameters.yml
+
+discovery:
+  # Date range for data discovery (using ISO format YYYY-MM-DD)
+  # These dates will only be used if get_most_recent is set to false
+  date_range:
+    start: "2023-06-01"
+    end: "2023-06-30"
+
+  # Get the most recent data available (last 30 days)
+  get_most_recent: true
+
+  # CMR API settings
+  cmr_api:
+    products:
+      lst: "MOD11A1"  # MODIS Terra LST daily product (most recent data)
+      lst_alternatives: [
+        "MYD11A1",    # MODIS Aqua LST (same structure, equally recent)
+        "MOD11B1",    # Terra LST 6km (same structure, equally recent)
+        "MOD11C1"     # Terra LST 0.05° (same structure, equally recent)
+      ]
+      ndvi: "MOD13Q1"  # MODIS Terra Vegetation Indices 16-Day product
+    provider: null     # Don't restrict provider to get more results
+    page_size: 100
+
+# UI configuration parameters
+ui:
+  default_region: "NYC001"  # Default region to display
+  default_date_range:
+    start: "2023-10-01"
+    end: "2023-10-31"
+  map_layers:
+    - name: "Land Surface Temperature"
+      id: "lst"
+      color_scale: "Viridis"
+    - name: "Anomaly"
+      id: "anomaly"
+      color_scale: "RdBu_r"
+    - name: "Heatwave Flag"
+      id: "heatwave_flag"
+      color_scale: "YlOrRd"
+    - name: "Urban Heat Island"
+      id: "uhi"
+      color_scale: "Plasma"
+    - name: "CDD/HDD"
+      id: "degree_days"
+      color_scale: "coolwarm"

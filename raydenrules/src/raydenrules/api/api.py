@@ -62,12 +62,6 @@ class Metric(BaseModel):
     anomaly_zscore: float
 
 
-class BackfillRequest(BaseModel):
-    region_id: str
-    from_date: date
-    to_date: date
-
-
 class Alert(BaseModel):
     name: str
     region_id: str
@@ -209,24 +203,6 @@ async def create_alert(alert: Alert):
         "recipients": alert.recipients,
         "status": "active",
         "created": str(date.today()),
-    }
-
-
-@app.post("/v1/backfill")
-async def request_backfill(request: BackfillRequest):
-    """Request a data backfill for a region and date range"""
-    # In a real implementation, this would:
-    # 1. Validate the request
-    # 2. Enqueue an SQS job
-    # 3. Return a job ID
-
-    return {
-        "job_id": f"BF-{date.today().strftime('%Y-%m-%d')}-001",
-        "region_id": request.region_id,
-        "from_date": request.from_date,
-        "to_date": request.to_date,
-        "status": "queued",
-        "estimated_completion_minutes": 15,
     }
 
 

@@ -1,6 +1,17 @@
+import importlib.util
+import logging
+
 from kedro.framework.hooks import hook_impl
-from pyspark import SparkConf
-from pyspark.sql import SparkSession
+
+# Check if pyspark is available
+pyspark_available = importlib.util.find_spec("pyspark") is not None
+
+# Only import pyspark if it's available
+if pyspark_available:
+    from pyspark import SparkConf
+    from pyspark.sql import SparkSession
+else:
+    logging.warning("PySpark not found. SparkHooks will be disabled.")
 
 
 class SparkHooks:
@@ -9,6 +20,10 @@ class SparkHooks:
         """Initialises a SparkSession using the config
         defined in project's conf folder.
         """
+        # Skip if pyspark is not available
+        if not pyspark_available:
+            logging.warning("Skipping SparkSession initialization: PySpark not available")
+            return
 
         # Load the spark configuration in spark.yaml using the config loader
         parameters = context.config_loader["spark"]

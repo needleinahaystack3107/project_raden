@@ -2,17 +2,40 @@
 Regions Page - Upload and manage custom geographic regions
 """
 
+import os
+import sys
 import time
 from datetime import datetime
 
 import pandas as pd
 import streamlit as st
 
-# Page title
-st.title("Geographic Regions")
+# Set up path for imports
+current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(current_dir)
+
+from theme import apply_terminal_theme, terminal_header  # noqa: E402
+
+# Apply terminal theme
+apply_terminal_theme()
+
+# Page header with terminal styling
+st.markdown(
+    """
+    <div style="background-color: #0a0a0a; padding: 10px; border: 1px solid #00FF00; margin-bottom: 20px;">
+        <h1 style="color: #00FF00; font-family: 'Courier New', monospace; margin: 0;">
+            <span style="color: #7FFFD4;">> </span>GEOGRAPHIC REGIONS
+        </h1>
+        <p style="color: #7FFFD4; font-family: 'Courier New', monospace; margin: 0; font-size: 0.9em;">
+            Upload and manage custom geographic regions for climate risk analysis
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 # Display built-in regions
-st.subheader("Built-in Regions")
+st.markdown(terminal_header("BUILT-IN REGIONS", level=2), unsafe_allow_html=True)
 built_in_regions = [
     {
         "id": "NYC001",
@@ -40,6 +63,19 @@ built_in_regions = [
     },
 ]
 
+# Add custom styling for table text - changing text color to black for better visibility
+st.markdown(
+    """
+    <style>
+    /* Overriding table text color to black for better visibility */
+    .stDataFrame td, .stDataFrame th, .dataframe td, .dataframe th {
+        color: #000000 !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 regions_df = pd.DataFrame(built_in_regions)
 st.dataframe(
     regions_df,
@@ -48,7 +84,7 @@ st.dataframe(
 )
 
 # User-defined regions section
-st.subheader("Custom Regions")
+st.markdown(terminal_header("CUSTOM REGIONS", level=2), unsafe_allow_html=True)
 
 # Mock custom regions
 custom_regions = [
@@ -78,7 +114,7 @@ else:
     st.info("No custom regions defined yet.")
 
 # Upload GeoJSON for custom region
-st.subheader("Upload New Region")
+st.markdown(terminal_header("UPLOAD NEW REGION", level=2), unsafe_allow_html=True)
 
 with st.form("upload_region_form"):
     region_name = st.text_input("Region Name")
@@ -88,9 +124,19 @@ with st.form("upload_region_form"):
     with col1:
         submit_button = st.form_submit_button("Upload and Save Region")
 
+# Add terminal styling for success message
 if submit_button and geojson_file is not None and region_name:
     # Mock successful upload
-    st.success(f"Region '{region_name}' uploaded successfully!")
+    st.markdown(
+        f"""
+        <div style="background-color: #0a0a0a; padding: 8px; border: 1px solid #00FF00; margin: 10px 0;">
+            <p style="color: #00FF00; font-family: 'Courier New', monospace; margin: 0;">
+                ✓ Region '{region_name}' uploaded successfully!
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     # Display a progress bar to simulate processing
     progress_text = "Processing and indexing region..."
@@ -100,7 +146,16 @@ if submit_button and geojson_file is not None and region_name:
         time.sleep(0.01)
         progress_bar.progress(i + 1, text=progress_text)
 
-    st.info(f"Region '{region_name}' is ready to use.")
+    st.markdown(
+        f"""
+        <div style="background-color: #0a0a0a; padding: 8px; border: 1px solid #00FF00; margin: 10px 0;">
+            <p style="color: #7FFFD4; font-family: 'Courier New', monospace; margin: 0;">
+                Region '{region_name}' is ready to use.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     # Example of uploaded GeoJSON structure
     st.json(
@@ -113,38 +168,15 @@ if submit_button and geojson_file is not None and region_name:
         }
     )
 
-# Backfill section
-st.subheader("Backfill Data for Region")
-
-# Region selector for backfill
-all_regions = [r["name"] for r in built_in_regions + custom_regions]
-backfill_region = st.selectbox("Select Region for Backfill", all_regions)
-
-# Date range for backfill
-col1, col2 = st.columns(2)
-with col1:
-    start_date = st.date_input(
-        "Start Date", datetime.now().replace(year=datetime.now().year - 1).date()
-    )
-with col2:
-    end_date = st.date_input("End Date", datetime.now().date())
-
-if st.button("Request Backfill"):
-    # Mock backfill request
-    st.success(f"Backfill requested for {backfill_region} from {start_date} to {end_date}!")
-
-    # Show queue information
-    st.info("Your backfill job has been queued. Job ID: BF-2025-10-21-001")
-
-    # Mock job status
-    st.metric(label="Estimated Processing Time", value="~15 minutes", delta=None)
-
-    # Additional instructions
-    st.markdown(
-        """
-    **What happens next?**
-    1. Your backfill job is processed in the background
-    2. When complete, data will be available in the Map and Overview pages
-    3. You'll receive a notification when processing is finished
+# App footer
+st.markdown("---")
+st.markdown(
     """
-    )
+    <div style="text-align: center;">
+        <p style="color: #7FFFD4; font-family: 'Courier New', monospace; font-size: 0.8em;">
+            RAYDEN RULES™ | CLIMATE RISK INTELLIGENCE PLATFORM | © 2025 | VERSION 0.0.0
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)

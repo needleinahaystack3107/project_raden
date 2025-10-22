@@ -1,0 +1,40 @@
+# Catalog entries for data discovery pipeline
+regions_list:
+  type: json.JSONDataset
+  filepath: data/02_intermediate/regions_list.json
+  versioned: true
+
+cmr_discovery_results:
+  type: json.JSONDataset
+  filepath: data/02_intermediate/cmr_discovery_results.json
+  versioned: true
+
+# Raw LST data per region
+lst_data_nyc:
+  type: json.JSONDataset
+  filepath: data/01_raw/cmr_discovery/NYC001_lst_data.json
+  versioned: true
+
+lst_data_lax:
+  type: json.JSONDataset
+  filepath: data/01_raw/cmr_discovery/LAX001_lst_data.json
+  versioned: true
+
+lst_data_chi:
+  type: json.JSONDataset
+  filepath: data/01_raw/cmr_discovery/CHI001_lst_data.json
+  versioned: true
+
+lst_data_mia:
+  type: json.JSONDataset
+  filepath: data/01_raw/cmr_discovery/MIA001_lst_data.json
+  versioned: true
+
+# Processed metrics data that API can access
+metrics_by_region:
+  type: PartitionedDataSet
+  path: data/03_primary/metrics_by_region
+  dataset:
+    type: json.JSONDataset
+    versioned: true
+  filename_suffix: .json

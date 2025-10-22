@@ -1,0 +1,443 @@
+"""
+Map Page - Visualize geospatial heat and climate data
+"""
+
+import json
+import os
+import requests
+from datetime import datetime, timedelta, date
+from typing import Dict, List
+
+import numpy as np
+import pandas as pd
+import pydeck as pdk
+import plotly.express as px
+import streamlit as st
+
+# API configuration
+API_BASE_URL = "http://localhost:8000"
+
+# Page title
+st.title("Climate Map View")
+st.caption("Visualize geospatial heat and climate data for selected regions")
+
+# Function to fetch regions from API (with fallback to mock data)
+@st.cache_data(ttl=3600)
+def load_regions() -> List[Dict]:
+    """
+    Load available regions from the API or mock data.
+
+    Returns:
+        List of region dictionaries with id, name, bbox, and type
+    """
+    try:
+        response = requests.get(f"{API_BASE_URL}/v1/regions", timeout=5)
+        if response.status_code == 200:
+            regions = response.json()
+            return regions
+    except Exception as e:
+        st.warning(f"Could not connect to API: {str(e)}")
+
+    # Fallback to mock data
+    return [
+        {
+            "id": "NYC001",
+            "name": "New York City",
+            "bbox": [-74.2589, 40.4774, -73.7004, 40.9176],
+            "type": "builtin"
+        },
+        {
+            "id": "LAX001",
+            "name": "Los Angeles",
+            "bbox": [-118.6682, 33.7037, -118.1553, 34.3373],
+            "type": "builtin"
+        },
+        {
+            "id": "CHI001",
+            "name": "Chicago",
+            "bbox": [-87.9402, 41.6445, -87.5245, 42.0229],
+            "type": "builtin"
+        },
+        {
+            "id": "MIA001",
+            "name": "Miami",
+            "bbox": [-80.3187, 25.7095, -80.1155, 25.8901],
+            "type": "builtin"
+        },
+    ]
+
+
+# Load mock data
+@st.cache_data
+def load_mock_data():
+    """Load mock metrics data from JSON file"""
+    script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    data_path = os.path.join(
+        script_dir, "..", "..", "..", "data", "01_raw", "data_samples", "metrics_mock.json"
+    )
+
+    with open(data_path) as f:
+        data = json.load(f)
+
+    return data
+
+
+# Function to generate mock heatmap data for visualization
+def create_mock_heatmap_data(bbox, region_center, selected_layer, date_idx=0):
+    """
+    Create mock heatmap data for visualization.
+
+    Args:
+        bbox: Bounding box of the region [west, south, east, north]
+        region_center: Center coordinates [lon, lat]
+        selected_layer: Type of data to display
+        date_idx: Date index (0 = today, 1 = yesterday, etc.)
+
+    Returns:
+        DataFrame with lat, lon, and value columns
+    """
+    lon_range = bbox[2] - bbox[0]
+    lat_range = bbox[3] - bbox[1]
+
+    # Create a grid of points
+    grid_size = 20
+    points = []
+
+    # Small random offset based on date_idx to simulate changing data
+    random_offset = (date_idx % 5) * 0.2
+
+    for i in range(grid_size):
+        for j in range(grid_size):
+            lon = bbox[0] + (i / (grid_size - 1)) * lon_range
+            lat = bbox[1] + (j / (grid_size - 1)) * lat_range
+
+            # Calculate distance from center to create a gradient
+            dist_from_center = ((lon - region_center[0]) ** 2 + (lat - region_center[1]) ** 2) ** 0.5
+            max_dist = ((lon_range / 2) ** 2 + (lat_range / 2) ** 2) ** 0.5
+            normalized_dist = dist_from_center / max_dist
+
+            # Add some randomness
+            noise = np.random.normal(0, 0.1)
+
+            # Different value ranges for different layer types
+            if selected_layer == "Land Surface Temperature":
+                value = 35 - (normalized_dist * 15) + noise + random_offset
+            elif selected_layer == "Anomaly":
+                value = 3 - (normalized_dist * 6) + noise + random_offset  # Fixed: Ensure full range from -3 to +3
+            elif selected_layer == "Heatwave Flag":
+                value = 1 if normalized_dist < 0.3 else 0
+            elif selected_layer == "Urban Heat Island":
+                value = 5 - (normalized_dist * 5) + noise + random_offset
+            else:  # CDD/HDD
+                value = 10 - (normalized_dist * 10) + noise + random_offset
+
+            points.append({
+                "lat": lat,
+                "lon": lon,
+                "value": value
+            })
+
+    return pd.DataFrame(points)
+
+
+# Get list of regions
+regions = load_regions()
+
+# Layer configuration
+LAYER_CONFIGS = {
+    "Land Surface Temperature": {
+        "color_scale": [[20, [65, 105, 225]], [27.5, [173, 216, 230]], [35, [255, 0, 0]]],
+        "legend_title": "Temperature (°C)",
+        "min_value": 20,
+        "max_value": 35
+    },
+    "Anomaly": {
+        "color_scale": [[-3, [0, 0, 255]], [0, [255, 255, 255]], [3, [255, 0, 0]]],
+        "legend_title": "Z-Score",
+        "min_value": -3,
+        "max_value": 3
+    },
+    "Heatwave Flag": {
+        "color_scale": [[0, [173, 216, 230]], [1, [255, 0, 0]]],
+        "legend_title": "Flag",
+        "min_value": 0,
+        "max_value": 1
+    },
+    "Urban Heat Island": {
+        "color_scale": [[0, [173, 216, 230]], [2.5, [255, 255, 0]], [5, [255, 0, 0]]],
+        "legend_title": "UHI Index",
+        "min_value": 0,
+        "max_value": 5
+    },
+    "CDD/HDD": {
+        "color_scale": [[0, [173, 216, 230]], [5, [255, 255, 0]], [10, [255, 0, 0]]],
+        "legend_title": "Degree Days",
+        "min_value": 0,
+        "max_value": 10
+    }
+}
+
+# Sidebar controls
+st.sidebar.header("Map Settings")
+
+# Region selector
+region_options = {region["name"]: region for region in regions}
+selected_region_name = st.sidebar.selectbox("Select Region", options=list(region_options.keys()))
+selected_region = region_options[selected_region_name]
+bbox = selected_region["bbox"]
+region_center = [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2]
+
+# Layer selector
+map_layers = list(LAYER_CONFIGS.keys())
+selected_layer = st.sidebar.selectbox("Select Layer", map_layers)
+layer_config = LAYER_CONFIGS[selected_layer]
+
+# Date selector with slider
+st.sidebar.subheader("Time Range")
+today = date.today()
+date_range = 30  # Number of days in the past to show
+
+# Create date slider
+dates = [today - timedelta(days=i) for i in range(date_range)]
+dates.reverse()  # Show oldest to newest
+date_labels = [d.strftime("%Y-%m-%d") for d in dates]
+
+selected_date_idx = st.sidebar.slider(
+    "Select Date",
+    min_value=0,
+    max_value=len(dates)-1,
+    value=len(dates)-1,  # Default to most recent
+    format="%d",
+    help="Slide to select different dates"
+)
+
+# Show selected date
+selected_date = dates[selected_date_idx]
+st.sidebar.info(f"Selected date: {selected_date.strftime('%Y-%m-%d')}")
+
+# Generate heatmap data based on selections
+heatmap_data = create_mock_heatmap_data(bbox, region_center, selected_layer, selected_date_idx)
+
+# Create multiple grid cells for smoother visualization
+def create_grid_layer():
+    # Use a consistent color scale based on the selected layer type
+    if selected_layer == "Anomaly":
+        # For anomaly, create a diverging color scale
+        color_expr = [
+            "interpolate",
+            ["linear"],
+            ["get", "value"],
+            -3, [0, 0, 255, 200],      # Blue for negative anomaly
+            0, [255, 255, 255, 200],   # White for no anomaly
+            3, [255, 0, 0, 200]        # Red for positive anomaly
+        ]
+    elif selected_layer == "Heatwave Flag":
+        # For binary heatwave flag (0 or 1)
+        color_expr = [
+            "case",
+            ["==", ["get", "value"], 1],
+            [255, 0, 0, 180],          # Red for heatwave
+            [65, 105, 225, 180]        # Blue for no heatwave
+        ]
+    elif selected_layer == "Land Surface Temperature":
+        color_expr = [
+            "interpolate",
+            ["linear"],
+            ["get", "value"],
+            20, [65, 105, 225, 200],    # Blue for 20°C
+            27.5, [173, 216, 230, 200], # Light blue for 27.5°C
+            35, [255, 0, 0, 200]        # Red for 35°C
+        ]
+    elif selected_layer == "Urban Heat Island":
+        color_expr = [
+            "interpolate",
+            ["linear"],
+            ["get", "value"],
+            0, [65, 105, 225, 200],     # Blue for 0
+            2.5, [255, 255, 0, 200],    # Yellow for 2.5
+            5, [255, 0, 0, 200]         # Red for 5
+        ]
+    else:  # CDD/HDD
+        color_expr = [
+            "interpolate",
+            ["linear"],
+            ["get", "value"],
+            0, [65, 105, 225, 200],     # Blue for 0
+            5, [255, 255, 0, 200],      # Yellow for 5
+            10, [255, 0, 0, 200]        # Red for 10
+        ]
+
+    # Use a grid layer for more consistent coverage
+    return pdk.Layer(
+        "GridCellLayer",
+        data=heatmap_data,
+        pickable=True,
+        extruded=False,
+        cell_size=300,
+        opacity=0.9,
+        get_position=["lon", "lat"],
+        get_fill_color=color_expr,
+    )
+
+# Create a scatterplot layer for point visualization
+def create_scatter_layer():
+    # Use a consistent color scale based on the selected layer type
+    if selected_layer == "Anomaly":
+        color_expr = [
+            "interpolate",
+            ["linear"],
+            ["get", "value"],
+            -3, [0, 0, 255, 180],      # Blue for negative anomaly
+            0, [255, 255, 255, 180],   # White for no anomaly
+            3, [255, 0, 0, 180]        # Red for positive anomaly
+        ]
+    elif selected_layer == "Heatwave Flag":
+        color_expr = [
+            "case",
+            ["==", ["get", "value"], 1],
+            [255, 0, 0, 180],          # Red for heatwave
+            [65, 105, 225, 180]        # Blue for no heatwave
+        ]
+    elif selected_layer == "Land Surface Temperature":
+        color_expr = [
+            "interpolate",
+            ["linear"],
+            ["get", "value"],
+            20, [65, 105, 225, 180],   # Blue for 20°C
+            27.5, [173, 216, 230, 180], # Light blue for 27.5°C
+            35, [255, 0, 0, 180]       # Red for 35°C
+        ]
+    elif selected_layer == "Urban Heat Island":
+        color_expr = [
+            "interpolate",
+            ["linear"],
+            ["get", "value"],
+            0, [65, 105, 225, 180],    # Blue for 0
+            2.5, [255, 255, 0, 180],   # Yellow for 2.5
+            5, [255, 0, 0, 180]        # Red for 5
+        ]
+    else:  # CDD/HDD
+        color_expr = [
+            "interpolate",
+            ["linear"],
+            ["get", "value"],
+            0, [65, 105, 225, 180],    # Blue for 0
+            5, [255, 255, 0, 180],     # Yellow for 5
+            10, [255, 0, 0, 180]       # Red for 10
+        ]
+
+    return pdk.Layer(
+        "ScatterplotLayer",
+        data=heatmap_data,
+        get_position=["lon", "lat"],
+        get_fill_color=color_expr,
+        get_radius=250,
+        radius_scale=6,
+        radius_min_pixels=5,
+        radius_max_pixels=30,
+        pickable=True,
+        opacity=0.8,
+        stroked=False,
+        filled=True,
+    )
+
+# Create both grid and scatter layers for better visualization
+grid_layer = create_grid_layer()
+scatter_layer = create_scatter_layer()
+
+# Use both layers for a more complete visualization
+layers = [grid_layer, scatter_layer]
+
+# Create the map view
+view_state = pdk.ViewState(
+    latitude=region_center[1],
+    longitude=region_center[0],
+    zoom=10,
+    bearing=0,
+    pitch=0
+)
+
+# Create map with the combined layers for better coverage
+r = pdk.Deck(
+    layers=layers,
+    initial_view_state=view_state,
+    map_style="mapbox://styles/mapbox/light-v10",
+    tooltip={
+        "text": "{value} " + layer_config["legend_title"],
+    }
+)
+
+# Display the map
+st.pydeck_chart(r)
+
+# Create a legend
+st.subheader("Legend")
+
+# Create simple legend
+legend_col1, legend_col2, legend_col3 = st.columns(3)
+
+with legend_col1:
+    if selected_layer == "Land Surface Temperature":
+        st.markdown("🔵 20°C")
+    elif selected_layer == "Anomaly":
+        st.markdown("🔵 -3°C (below average)")
+    elif selected_layer == "Heatwave Flag":
+        st.markdown("🔵 No heatwave (0)")
+    elif selected_layer == "Urban Heat Island":
+        st.markdown("🔵 0 (no UHI effect)")
+    else:  # CDD/HDD
+        st.markdown("🔵 0 CDD")
+
+with legend_col2:
+    if selected_layer == "Land Surface Temperature":
+        st.markdown("🟢 27.5°C")
+    elif selected_layer == "Anomaly":
+        st.markdown("⚪ 0°C (average)")
+    elif selected_layer == "Heatwave Flag":
+        st.markdown("")
+    elif selected_layer == "Urban Heat Island":
+        st.markdown("🟡 2.5 (moderate UHI)")
+    else:  # CDD/HDD
+        st.markdown("🟡 5 CDD")
+
+with legend_col3:
+    if selected_layer == "Land Surface Temperature":
+        st.markdown("🔴 35°C")
+    elif selected_layer == "Anomaly":
+        st.markdown("🔴 +3°C (above average)")
+    elif selected_layer == "Heatwave Flag":
+        st.markdown("🔴 Heatwave (1)")
+    elif selected_layer == "Urban Heat Island":
+        st.markdown("🔴 5 (severe UHI)")
+    else:  # CDD/HDD
+        st.markdown("🔴 10 CDD")
+
+# Add date label and info
+st.caption(f"Data for {selected_region_name} on {selected_date.strftime('%B %d, %Y')}")
+
+# Provide additional context based on layer type
+if selected_layer == "Land Surface Temperature":
+    st.info("Land Surface Temperature (LST) represents the radiative skin temperature of the land derived from satellite thermal infrared data.")
+elif selected_layer == "Anomaly":
+    st.info("Temperature anomalies represent departures from the long-term average, with positive values indicating warmer than average conditions.")
+elif selected_layer == "Heatwave Flag":
+    st.info("Heatwave flags indicate periods when temperatures exceed the 90th percentile for at least 3 consecutive days.")
+elif selected_layer == "Urban Heat Island":
+    st.info("The Urban Heat Island (UHI) effect measures how much warmer urban areas are compared to surrounding rural areas.")
+elif selected_layer == "CDD/HDD":
+    st.info("Cooling Degree Days (CDD) and Heating Degree Days (HDD) are measurements designed to quantify energy demand for cooling and heating buildings.")
+
+# Date slider for animation (non-functional in this prototype)
+st.slider(
+    "Animation timeline",
+    min_value=datetime.now().date() - timedelta(days=30),
+    max_value=datetime.now().date(),
+    value=selected_date,
+    format="YYYY-MM-DD",
+    disabled=True,
+)
+
+# Placeholder for future functionality
+st.caption(
+    "Note: This is a prototype with simulated data. In the full version, you'll be able to animate through time and download/analyze specific areas."
+)
