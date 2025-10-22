@@ -1,0 +1,55 @@
+# Pre-commit configuration for Rayden Rules project
+# See https://pre-commit.com for more information
+
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-yaml
+    -   id: check-json
+    -   id: check-added-large-files
+    -   id: debug-statements
+    -   id: detect-private-key
+    -   id: check-merge-conflict
+
+-   repo: https://github.com/psf/black
+    rev: 24.3.0
+    hooks:
+    -   id: black
+        language_version: python3
+        args: ["--line-length=100"]
+
+-   repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: 'v0.3.3'
+    hooks:
+    -   id: ruff
+        args: ["--fix", "--line-length=100"]
+
+-   repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+    -   id: isort
+        args: ["--profile", "black", "--filter-files"]
+
+# Temporarily disable the pytest hook to avoid the arguments conflict
+# When you're ready to enable it, you might need to modify your pytest configuration
+# -   repo: local
+#     hooks:
+#     -   id: pytest-check
+#         name: pytest-check
+#         entry: bash -c 'cd /Users/abhijit_haridas/PycharmProjects/project_raden/raydenrules && python -m pytest'
+#         language: system
+#         pass_filenames: false
+#         always_run: true
+#         verbose: true
+
+# Uncomment the following section to enable pylint
+# -   repo: https://github.com/pycqa/pylint
+#     rev: v3.0.4
+#     hooks:
+#     -   id: pylint
+#         args:
+#         - --disable=C0111,R0903,C0301,C0103,C0303,C0330
+#         - --max-line-length=100
