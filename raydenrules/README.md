@@ -1,21 +1,149 @@
-# raydenrules
+# Rayden Rules
 
 [![Powered by Kedro](https://img.shields.io/badge/powered_by-kedro-ffc900?logo=kedro)](https://kedro.org)
+[![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-black)](https://github.com/astral-sh/ruff)
 
 ## Overview
 
-This is your new Kedro project with PySpark setup, which was generated using `kedro 1.0.0`.
+Rayden Rules is an advanced climate analytics platform focused on providing actionable insights on urban heat patterns, heatwaves, and climate anomalies. Built on a robust data engineering foundation with Kedro and PySpark, it offers both API access to climate metrics and an intuitive web dashboard for data visualization.
 
-Take a look at the [Kedro documentation](https://docs.kedro.org) to get started.
+## Long-Term Vision
 
-## Rules and guidelines
+Our long-term vision for Rayden Rules is to become the comprehensive platform for climate resilience planning, especially focusing on urban heat management and climate adaptation. We aim to:
 
-In order to get the best out of the template:
+1. **Expand geographic coverage** to include all major urban centers globally
+2. **Increase temporal resolution** of climate data for more accurate predictions
+3. **Develop advanced AI models** for predicting climate patterns and anomalies
+4. **Create automated alerting systems** for early warning of extreme weather events
+5. **Enable community collaboration** through shared insights and adaptation strategies
+6. **Integrate with city planning tools** to help design climate-resilient urban spaces
 
-* Don't remove any lines from the `.gitignore` file we provide
-* Make sure your results can be reproduced by following a [data engineering convention](https://docs.kedro.org/en/stable/faq/faq.html#what-is-data-engineering-convention)
-* Don't commit data to your repository
-* Don't commit any credentials or your local configuration to your repository. Keep all your credentials and local configuration in `conf/local/`
+## Project Components
+
+Rayden Rules consists of several integrated components:
+
+- **Data Pipeline**: Kedro-powered ETL processes that ingest, transform and prepare climate data
+- **REST API**: FastAPI-based endpoints providing programmatic access to metrics and regions
+- **Web Dashboard**: Streamlit application for interactive data visualization and alerting
+- **Alert System**: Configurable rule-based system for climate event monitoring
+
+## Latest Updates (October 21, 2025)
+
+In our most recent release, we've made significant improvements to the codebase quality and features:
+
+- **Code Quality Improvements**:
+  - Fixed all linting issues identified by Ruff
+  - Replaced magic numbers with meaningful constants
+  - Added proper documentation and type annotations
+  - Improved logging system replacing print statements
+
+- **Feature Enhancements**:
+  - Enhanced API reliability and error handling
+  - Improved visualization components in the dashboard
+  - Added new climate metrics (UHI index, anomaly z-scores)
+  - Expanded test coverage for both API and UI components
+
+## Architecture
+
+The project follows a modular architecture with clear separation of concerns:
+
+```
+raydenrules/
+├── api/         # FastAPI endpoints for data access
+├── app/         # Streamlit dashboard application
+│   ├── components/  # Reusable UI components
+│   ├── pages/       # Dashboard pages (map, alerts, regions)
+│   └── utils/       # Helper functions
+└── pipelines/   # Kedro data processing pipelines
+```
+
+## Installation & Setup
+
+### Prerequisites
+- Python 3.10+
+- PySpark 3.3+
+- Docker (optional, for containerized deployment)
+
+### Installation
+
+1. Clone the repository:
+   ```
+   git clone https://github.com/your-organization/raydenrules.git
+   cd raydenrules
+   ```
+
+2. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
+3. Set up local configuration:
+   ```
+   cp conf/base/credentials.yml conf/local/credentials.yml
+   # Edit conf/local/credentials.yml with your API keys and database credentials
+   ```
+
+## Running the Project
+
+### Data Pipeline
+
+Run the full data processing pipeline:
+```
+kedro run
+```
+
+Run specific pipeline nodes:
+```
+kedro run --pipeline=data_processing
+kedro run --pipeline=feature_engineering
+```
+
+### API Server
+
+Start the FastAPI server:
+```
+python -m src.raydenrules.api.api
+```
+
+The API will be available at `http://localhost:8000` with documentation at `http://localhost:8000/docs`.
+
+### Web Dashboard
+
+Launch the Streamlit dashboard:
+```
+streamlit run src/raydenrules/app/app.py
+```
+
+The dashboard will be accessible at `http://localhost:8501`.
+
+## Testing
+
+Run all tests:
+```
+pytest
+```
+
+Run specific test suites:
+```
+pytest tests/api/
+pytest tests/ui/
+```
+
+### API Testing
+
+For manual API testing, you can use the provided script:
+```
+python tests/api/manual_api_test.py
+```
+
+## Documentation
+
+Generate project documentation:
+```
+kedro build-docs
+```
+
+View the documentation by opening `docs/build/html/index.html` in your browser.
 
 ## How to install dependencies
 
