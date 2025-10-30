@@ -33,11 +33,11 @@ def register_pipelines() -> dict[str, Pipeline]:
     pipelines["bronze_to_silver"] = bronze_ingestion_pipeline + silver_processing_pipeline
 
     # Full pipeline: Discovery → Bronze → Silver → Primary
-    pipelines["full_pipeline"] = (
+    pipelines["data_engineering"] = (
         data_discovery_pipeline + bronze_ingestion_pipeline + silver_processing_pipeline
     )
 
     # Create the default pipeline that runs everything
-    pipelines["__default__"] = pipelines["full_pipeline"]
+    pipelines["__default__"] = pipelines["data_engineering"]
 
     return pipelines
