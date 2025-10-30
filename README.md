@@ -9,7 +9,7 @@
 
 ## "I am the God of Thunder and Protector of Earthrealm!"
 
-Greetings, mortal. You have discovered **Project Raden** - a repository blessed by the Thunder God himself! 
+Greetings, mortal. You have discovered **Project Raden** - a repository blessed by the Thunder God himself! (Yes, it's spelled "Raden" - a playful twist on the legendary Raiden!) 
 
 Just as Raiden protects Earthrealm from the forces of Outworld, this project harnesses the power of climate data to protect our realm from the forces of nature. With lightning-fast analytics and thunder-striking insights, we monitor urban heat patterns, heatwaves, and climate anomalies.
 
