@@ -35,7 +35,7 @@ silver:
   # NASA Earthdata authentication token (optional, required for downloads)
   # Get token from: https://urs.earthdata.nasa.gov/
   # IMPORTANT: Override this in conf/local/parameters.yml for security (git-ignored)
-  nasa_auth_token: ""
+  nasa_auth_token: "inset_your_token_here"
 
   # Processing options
   base_temperature: 18.0  # Base temperature for degree days calculation (Celsius)
