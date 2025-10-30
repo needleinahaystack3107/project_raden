@@ -115,4 +115,3 @@ Make sure FastAPI is running on port 8000, or the app will use mock data.
 
 - Reflex Docs: https://reflex.dev/docs/
 - Project Issues: Check terminal output for errors
-- Rollback: See MIGRATION_GUIDE.md for reverting to Streamlit

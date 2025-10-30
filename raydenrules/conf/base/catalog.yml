@@ -113,3 +113,16 @@ primary_metrics_by_region:
     type: json.JSONDataset
     versioned: true
   filename_suffix: .json
+
+# Gold/Feature layer (04_feature) - Aggregated metrics for API consumption
+# Intermediate aggregated metrics before region metadata enrichment
+gold_metrics_aggregated:
+  type: MemoryDataset
+
+# Final gold metrics by region - API-ready format
+gold_metrics_by_region:
+  type: partitions.PartitionedDataset
+  path: data/04_feature/metrics_by_region
+  dataset:
+    type: json.JSONDataset
+  filename_suffix: .json
