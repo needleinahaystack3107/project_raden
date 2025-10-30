@@ -13,7 +13,8 @@ import reflex as rx
 import requests
 
 # API Configuration
-API_BASE_URL = "http://localhost:8000"
+# Note: The app will attempt to call external FastAPI on 8001, but falls back to mock data
+API_BASE_URL = "http://localhost:8001"
 
 # Constants
 HTTP_OK = 200
@@ -355,22 +356,53 @@ class State(rx.State):
 
 def metric_card(title: str, value, subtitle=None, color_scheme: str = "blue") -> rx.Component:
     """Create a metric card component with hover effects."""
+    # PyCharm-inspired color mapping
+    color_map = {
+        "red": "#CC7832",
+        "orange": "#FFC66D",
+        "blue": "#6897BB",
+        "purple": "#9876AA",
+        "green": "#6A8759",
+        "cyan": "#287BDE",
+    }
+    accent_color = color_map.get(color_scheme, "#6897BB")
+
     return rx.box(
         rx.vstack(
-            rx.text(title, size="2", weight="medium", color=rx.color(color_scheme, 11)),
-            rx.heading(value, size="6", color=rx.color(color_scheme, 12)),
-            rx.text(subtitle, size="1", color="gray") if subtitle else rx.box(),
-            spacing="1",
+            rx.text(
+                title,
+                size="2",
+                weight="medium",
+                color="#A9B7C6",
+                font_family="'Inter', 'Segoe UI', sans-serif",
+            ),
+            rx.heading(
+                value,
+                size="6",
+                color=accent_color,
+                font_family="'Inter', 'Segoe UI', sans-serif",
+                font_weight="600",
+            ),
+            (
+                rx.text(
+                    subtitle,
+                    size="1",
+                    color="#808080",
+                    font_family="'Inter', 'Segoe UI', sans-serif",
+                )
+                if subtitle
+                else rx.box()
+            ),
+            spacing="2",
         ),
-        padding="4",
-        border_radius="lg",
-        border="1px solid",
-        border_color=rx.color("gray", 6),
-        background=rx.color("gray", 1),
-        box_shadow="sm",
+        padding="5",
+        border_radius="6px",
+        border="1px solid #3C3F41",
+        background="#2B2B2B",
+        box_shadow="0 1px 3px rgba(0, 0, 0, 0.3)",
         _hover={
-            "box_shadow": "lg",
-            "border_color": rx.color(color_scheme, 7),
+            "box_shadow": "0 4px 6px rgba(0, 0, 0, 0.4)",
+            "border_color": accent_color,
             "transform": "translateY(-2px)",
             "transition": "all 0.2s ease-in-out",
         },
@@ -382,20 +414,22 @@ def index_page() -> rx.Component:
     """Main dashboard page."""
     return rx.box(
         rx.vstack(
-            # Header with gradient background
+            # Page header without duplicate title
             rx.box(
                 rx.vstack(
                     rx.heading(
-                        "RAYDEN RULES - Climate Risk Intelligence",
-                        size="8",
-                        background_image="linear-gradient(90deg, #4F46E5 0%, #06B6D4 100%)",
-                        background_clip="text",
+                        "Climate Risk Intelligence Dashboard",
+                        size="7",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
+                        font_weight="600",
                     ),
                     rx.hstack(
                         rx.text(
                             f"Region: {State.selected_region_name} | ID: {State.selected_region_id}",
                             size="3",
-                            color="gray",
+                            color="#A9B7C6",
+                            font_family="'Inter', 'Segoe UI', sans-serif",
                         ),
                         rx.badge(
                             rx.cond(
@@ -406,36 +440,49 @@ def index_page() -> rx.Component:
                             color_scheme=rx.cond(State.chart_data.length() > 0, "green", "orange"),
                             size="2",
                         ),
-                        spacing="3",
+                        spacing="4",
                         align_items="center",
                     ),
-                    spacing="2",
+                    spacing="3",
                 ),
                 padding="6",
-                border_radius="lg",
-                background=rx.color("gray", 2),
-                margin_bottom="4",
+                border_radius="6px",
+                background="#2B2B2B",
+                margin_bottom="6",
+                border="1px solid #3C3F41",
             ),
             # Sidebar controls
             rx.hstack(
                 rx.vstack(
-                    rx.text("Select Region", weight="bold", size="3"),
+                    rx.text(
+                        "Select Region",
+                        weight="bold",
+                        size="3",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
+                    ),
                     rx.select(
                         State.region_names,
                         value=State.selected_region_name,
                         on_change=State.set_region,
                         size="3",
                     ),
-                    rx.divider(margin_top="4", margin_bottom="4"),
-                    rx.text("Date Range", weight="bold", size="3"),
-                    rx.text("From:", size="2", color="gray"),
+                    rx.divider(margin_top="4", margin_bottom="4", border_color="#3C3F41"),
+                    rx.text(
+                        "Date Range",
+                        weight="bold",
+                        size="3",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
+                    ),
+                    rx.text("From:", size="2", color="#A9B7C6"),
                     rx.input(
                         type="date",
                         value=State.start_date,
                         on_change=State.set_start_date,
                         size="2",
                     ),
-                    rx.text("To:", size="2", color="gray", margin_top="2"),
+                    rx.text("To:", size="2", color="#A9B7C6", margin_top="3"),
                     rx.input(
                         type="date",
                         value=State.end_date,
@@ -443,16 +490,22 @@ def index_page() -> rx.Component:
                         size="2",
                     ),
                     width="300px",
-                    padding="5",
-                    border_radius="lg",
-                    background=rx.color("gray", 2),
-                    box_shadow="md",
-                    spacing="2",
+                    padding="6",
+                    border_radius="6px",
+                    background="#2B2B2B",
+                    border="1px solid #3C3F41",
+                    spacing="3",
                 ),
                 # Main content
                 rx.vstack(
                     # KPI Cards
-                    rx.heading("Risk Indicators", size="6", margin_bottom="3"),
+                    rx.heading(
+                        "Risk Indicators",
+                        size="6",
+                        margin_bottom="4",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
+                    ),
                     rx.grid(
                         metric_card(
                             "Surface Temperature",
@@ -484,12 +537,23 @@ def index_page() -> rx.Component:
                     ),
                     # Chart section
                     rx.heading(
-                        "Historical Trend Analysis", size="6", margin_top="6", margin_bottom="3"
+                        "Historical Trend Analysis",
+                        size="6",
+                        margin_top="6",
+                        margin_bottom="4",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
                     ),
                     rx.box(
                         rx.vstack(
                             rx.hstack(
-                                rx.text("Chart Type:", weight="bold", size="3"),
+                                rx.text(
+                                    "Chart Type:",
+                                    weight="bold",
+                                    size="3",
+                                    color="#A9B7C6",
+                                    font_family="'Inter', 'Segoe UI', sans-serif",
+                                ),
                                 rx.select(
                                     ["Line", "Bar", "Area"],
                                     value=State.chart_type.capitalize(),
@@ -532,14 +596,16 @@ def index_page() -> rx.Component:
                                             "📊 No data available",
                                             size="4",
                                             weight="bold",
-                                            color="gray",
+                                            color="#A9B7C6",
+                                            font_family="'Inter', 'Segoe UI', sans-serif",
                                         ),
                                         rx.text(
                                             "Select a date range and region to view temperature data",
                                             size="2",
-                                            color="gray",
+                                            color="#808080",
+                                            font_family="'Inter', 'Segoe UI', sans-serif",
                                         ),
-                                        spacing="2",
+                                        spacing="3",
                                     ),
                                     height="300px",
                                 ),
@@ -547,23 +613,28 @@ def index_page() -> rx.Component:
                             spacing="4",
                         ),
                         padding="6",
-                        border_radius="lg",
-                        background=rx.color("gray", 1),
-                        border="1px solid",
-                        border_color=rx.color("gray", 6),
+                        border_radius="6px",
+                        background="#2B2B2B",
+                        border="1px solid #3C3F41",
                         box_shadow="md",
                         width="100%",
                     ),
                     # Combined metrics chart
                     rx.heading(
-                        "Multi-Metric Comparison", size="6", margin_top="6", margin_bottom="3"
+                        "Multi-Metric Comparison",
+                        size="6",
+                        margin_top="6",
+                        margin_bottom="4",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
                     ),
                     rx.box(
                         rx.vstack(
                             rx.text(
                                 "Comparing Temperature, Z-Score, and UHI Index",
                                 size="2",
-                                color="gray",
+                                color="#A9B7C6",
+                                font_family="'Inter', 'Segoe UI', sans-serif",
                                 margin_bottom="3",
                             ),
                             rx.cond(
@@ -604,14 +675,16 @@ def index_page() -> rx.Component:
                                             "📊 No data available",
                                             size="4",
                                             weight="bold",
-                                            color="gray",
+                                            color="#A9B7C6",
+                                            font_family="'Inter', 'Segoe UI', sans-serif",
                                         ),
                                         rx.text(
                                             "Adjust date range to view multi-metric comparison",
                                             size="2",
-                                            color="gray",
+                                            color="#808080",
+                                            font_family="'Inter', 'Segoe UI', sans-serif",
                                         ),
-                                        spacing="2",
+                                        spacing="3",
                                     ),
                                     height="300px",
                                 ),
@@ -619,22 +692,32 @@ def index_page() -> rx.Component:
                             spacing="4",
                         ),
                         padding="6",
-                        border_radius="lg",
-                        background=rx.color("gray", 1),
-                        border="1px solid",
-                        border_color=rx.color("gray", 6),
-                        box_shadow="md",
+                        border_radius="6px",
+                        background="#2B2B2B",
+                        border="1px solid #3C3F41",
                         width="100%",
                         margin_bottom="6",
                     ),
                     # Secondary charts grid
-                    rx.heading("Detailed Metrics", size="6", margin_top="6", margin_bottom="3"),
+                    rx.heading(
+                        "Detailed Metrics",
+                        size="6",
+                        margin_top="6",
+                        margin_bottom="4",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
+                    ),
                     rx.grid(
                         # Anomaly Z-Score chart
                         rx.box(
                             rx.vstack(
                                 rx.text(
-                                    "Anomaly Z-Score", weight="bold", size="3", margin_bottom="2"
+                                    "Anomaly Z-Score",
+                                    weight="bold",
+                                    size="3",
+                                    margin_bottom="3",
+                                    color="#D4D4D4",
+                                    font_family="'Inter', 'Segoe UI', sans-serif",
                                 ),
                                 rx.cond(
                                     State.chart_data.length() > 0,
@@ -660,18 +743,21 @@ def index_page() -> rx.Component:
                                         height=200,
                                     ),
                                     rx.center(
-                                        rx.text("📊 No data", color="gray", size="2"),
+                                        rx.text(
+                                            "📊 No data",
+                                            color="#808080",
+                                            size="2",
+                                            font_family="'Inter', 'Segoe UI', sans-serif",
+                                        ),
                                         height="200px",
                                     ),
                                 ),
-                                spacing="2",
+                                spacing="3",
                             ),
-                            padding="4",
-                            border_radius="lg",
-                            background=rx.color("gray", 1),
-                            border="1px solid",
-                            border_color=rx.color("gray", 6),
-                            box_shadow="sm",
+                            padding="5",
+                            border_radius="6px",
+                            background="#2B2B2B",
+                            border="1px solid #3C3F41",
                         ),
                         # CDD chart
                         rx.box(
@@ -680,7 +766,9 @@ def index_page() -> rx.Component:
                                     "Cooling Degree Days",
                                     weight="bold",
                                     size="3",
-                                    margin_bottom="2",
+                                    margin_bottom="3",
+                                    color="#D4D4D4",
+                                    font_family="'Inter', 'Segoe UI', sans-serif",
                                 ),
                                 rx.cond(
                                     State.chart_data.length() > 0,
@@ -704,18 +792,21 @@ def index_page() -> rx.Component:
                                         height=200,
                                     ),
                                     rx.center(
-                                        rx.text("📊 No data", color="gray", size="2"),
+                                        rx.text(
+                                            "📊 No data",
+                                            color="#808080",
+                                            size="2",
+                                            font_family="'Inter', 'Segoe UI', sans-serif",
+                                        ),
                                         height="200px",
                                     ),
                                 ),
-                                spacing="2",
+                                spacing="3",
                             ),
-                            padding="4",
-                            border_radius="lg",
-                            background=rx.color("gray", 1),
-                            border="1px solid",
-                            border_color=rx.color("gray", 6),
-                            box_shadow="sm",
+                            padding="5",
+                            border_radius="6px",
+                            background="#2B2B2B",
+                            border="1px solid #3C3F41",
                         ),
                         columns="2",
                         spacing="4",
@@ -730,7 +821,9 @@ def index_page() -> rx.Component:
                                     "Heating Degree Days",
                                     weight="bold",
                                     size="3",
-                                    margin_bottom="2",
+                                    margin_bottom="3",
+                                    color="#D4D4D4",
+                                    font_family="'Inter', 'Segoe UI', sans-serif",
                                 ),
                                 rx.cond(
                                     State.chart_data.length() > 0,
@@ -754,24 +847,32 @@ def index_page() -> rx.Component:
                                         height=200,
                                     ),
                                     rx.center(
-                                        rx.text("📊 No data", color="gray", size="2"),
+                                        rx.text(
+                                            "📊 No data",
+                                            color="#808080",
+                                            size="2",
+                                            font_family="'Inter', 'Segoe UI', sans-serif",
+                                        ),
                                         height="200px",
                                     ),
                                 ),
-                                spacing="2",
+                                spacing="3",
                             ),
-                            padding="4",
-                            border_radius="lg",
-                            background=rx.color("gray", 1),
-                            border="1px solid",
-                            border_color=rx.color("gray", 6),
-                            box_shadow="sm",
+                            padding="5",
+                            border_radius="6px",
+                            background="#2B2B2B",
+                            border="1px solid #3C3F41",
                         ),
                         # Heatwave Flag chart
                         rx.box(
                             rx.vstack(
                                 rx.text(
-                                    "Heatwave Events", weight="bold", size="3", margin_bottom="2"
+                                    "Heatwave Events",
+                                    weight="bold",
+                                    size="3",
+                                    margin_bottom="3",
+                                    color="#D4D4D4",
+                                    font_family="'Inter', 'Segoe UI', sans-serif",
                                 ),
                                 rx.cond(
                                     State.chart_data.length() > 0,
@@ -795,18 +896,21 @@ def index_page() -> rx.Component:
                                         height=200,
                                     ),
                                     rx.center(
-                                        rx.text("📊 No data", color="gray", size="2"),
+                                        rx.text(
+                                            "📊 No data",
+                                            color="#808080",
+                                            size="2",
+                                            font_family="'Inter', 'Segoe UI', sans-serif",
+                                        ),
                                         height="200px",
                                     ),
                                 ),
-                                spacing="2",
+                                spacing="3",
                             ),
-                            padding="4",
-                            border_radius="lg",
-                            background=rx.color("gray", 1),
-                            border="1px solid",
-                            border_color=rx.color("gray", 6),
-                            box_shadow="sm",
+                            padding="5",
+                            border_radius="6px",
+                            background="#2B2B2B",
+                            border="1px solid #3C3F41",
                         ),
                         columns="2",
                         spacing="4",
@@ -820,21 +924,46 @@ def index_page() -> rx.Component:
                 align_items="start",
             ),
             # Footer
-            rx.divider(margin_top="8"),
+            rx.divider(margin_top="8", border_color="#00D9FF", opacity="0.3"),
             rx.center(
-                rx.text(
-                    "RAYDEN RULES™ | Climate Risk Intelligence Platform | © 2025",
-                    size="1",
-                    color="gray",
+                rx.hstack(
+                    rx.text("⚡", size="2", color="#00D9FF"),
+                    rx.text(
+                        "RAYDEN RULES™",
+                        size="2",
+                        weight="bold",
+                        color="#00D9FF",
+                        font_family="'Rajdhani', sans-serif",
+                        letter_spacing="0.1em",
+                    ),
+                    rx.text("|", size="2", color="#666"),
+                    rx.text(
+                        "Climate Risk Intelligence Platform",
+                        size="2",
+                        color="#999",
+                        font_family="'Rajdhani', sans-serif",
+                    ),
+                    rx.text("|", size="2", color="#666"),
+                    rx.text(
+                        "© 2025",
+                        size="2",
+                        color="#666",
+                        font_family="'Rajdhani', sans-serif",
+                    ),
+                    rx.text("⚡", size="2", color="#00D9FF"),
+                    spacing="2",
+                    align_items="center",
                 ),
+                padding_y="4",
             ),
-            spacing="4",
+            spacing="5",
             padding="8",
             max_width="1400px",
             margin="0 auto",
         ),
         width="100%",
-        background=rx.color("gray", 1),
+        background="#1E1E1E",
+        min_height="100vh",
     )
 
 
@@ -847,24 +976,33 @@ def alerts_page() -> rx.Component:
                 rx.vstack(
                     rx.heading(
                         "Risk Alert Management",
-                        size="8",
-                        background_image="linear-gradient(90deg, #F59E0B 0%, #EF4444 100%)",
-                        background_clip="text",
+                        size="7",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
+                        font_weight="600",
                     ),
                     rx.text(
                         "Configure threshold-based notifications for climate risk factors",
                         size="3",
-                        color="gray",
+                        color="#A9B7C6",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
                     ),
-                    spacing="2",
+                    spacing="3",
                 ),
                 padding="6",
-                border_radius="lg",
-                background=rx.color("gray", 2),
-                margin_bottom="4",
+                border_radius="6px",
+                background="#2B2B2B",
+                border="1px solid #3C3F41",
+                margin_bottom="6",
             ),
             # Alert statistics
-            rx.heading("Alert Statistics", size="6", margin_bottom="3"),
+            rx.heading(
+                "Alert Statistics",
+                size="6",
+                margin_bottom="4",
+                color="#D4D4D4",
+                font_family="'Inter', 'Segoe UI', sans-serif",
+            ),
             rx.grid(
                 metric_card(
                     "Total Alerts", State.alert_stats["total"], "All configured alerts", "blue"
@@ -880,13 +1018,20 @@ def alerts_page() -> rx.Component:
                 margin_bottom="6",
             ),
             # Alert trend chart
-            rx.heading("Alert Frequency Trend", size="6", margin_bottom="3"),
+            rx.heading(
+                "Alert Frequency Trend",
+                size="6",
+                margin_bottom="4",
+                color="#D4D4D4",
+                font_family="'Inter', 'Segoe UI', sans-serif",
+            ),
             rx.box(
                 rx.vstack(
                     rx.text(
                         "Alert triggers over the past 30 days",
                         size="2",
-                        color="gray",
+                        color="#A9B7C6",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
                         margin_bottom="3",
                     ),
                     rx.recharts.bar_chart(
@@ -911,33 +1056,55 @@ def alerts_page() -> rx.Component:
                         width="100%",
                         height=250,
                     ),
-                    spacing="2",
+                    spacing="3",
                 ),
                 padding="6",
-                border_radius="lg",
-                background=rx.color("gray", 1),
-                border="1px solid",
-                border_color=rx.color("gray", 6),
-                box_shadow="md",
+                border_radius="6px",
+                background="#2B2B2B",
+                border="1px solid #3C3F41",
                 margin_bottom="6",
             ),
             # Existing alerts
-            rx.heading("Configured Alerts", size="6", margin_top="6", margin_bottom="3"),
+            rx.heading(
+                "Configured Alerts",
+                size="6",
+                margin_top="6",
+                margin_bottom="4",
+                color="#D4D4D4",
+                font_family="'Inter', 'Segoe UI', sans-serif",
+            ),
             rx.box(
                 rx.foreach(
                     State.alerts,
                     lambda alert: rx.box(
                         rx.hstack(
                             rx.vstack(
-                                rx.text(alert["name"], weight="bold", size="3"),
-                                rx.text(f"Region: {alert['region_id']}", size="2", color="gray"),
-                                rx.text(f"Rule: {alert['rule']}", size="2"),
+                                rx.text(
+                                    alert["name"],
+                                    weight="bold",
+                                    size="3",
+                                    color="#D4D4D4",
+                                    font_family="'Inter', 'Segoe UI', sans-serif",
+                                ),
+                                rx.text(
+                                    f"Region: {alert['region_id']}",
+                                    size="2",
+                                    color="#A9B7C6",
+                                    font_family="'Inter', 'Segoe UI', sans-serif",
+                                ),
+                                rx.text(
+                                    f"Rule: {alert['rule']}",
+                                    size="2",
+                                    color="#D4D4D4",
+                                    font_family="'Inter', 'Segoe UI', sans-serif",
+                                ),
                                 rx.text(
                                     f"Channel: {alert['channel']} → {alert['recipients']}",
                                     size="2",
-                                    color="gray",
+                                    color="#A9B7C6",
+                                    font_family="'Inter', 'Segoe UI', sans-serif",
                                 ),
-                                spacing="1",
+                                spacing="2",
                                 align_items="start",
                             ),
                             rx.hstack(
@@ -957,11 +1124,9 @@ def alerts_page() -> rx.Component:
                             width="100%",
                         ),
                         padding="5",
-                        border_radius="lg",
-                        border="1px solid",
-                        border_color=rx.color("gray", 6),
-                        background=rx.color("gray", 1),
-                        box_shadow="sm",
+                        border_radius="6px",
+                        border="1px solid #3C3F41",
+                        background="#2B2B2B",
                         margin_bottom="3",
                         _hover={
                             "box_shadow": "md",
@@ -974,17 +1139,37 @@ def alerts_page() -> rx.Component:
                 ),
             ),
             # Create new alert
-            rx.heading("Create New Risk Alert", size="6", margin_top="6", margin_bottom="3"),
+            rx.heading(
+                "Create New Risk Alert",
+                size="6",
+                margin_top="6",
+                margin_bottom="4",
+                color="#D4D4D4",
+                font_family="'Inter', 'Segoe UI', sans-serif",
+            ),
             rx.box(
                 rx.vstack(
-                    rx.text("Alert Name", weight="bold", size="3"),
+                    rx.text(
+                        "Alert Name",
+                        weight="bold",
+                        size="3",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
+                    ),
                     rx.input(
                         placeholder="Enter alert name",
                         value=State.alert_name,
                         on_change=State.set_alert_name,
                         size="3",
                     ),
-                    rx.text("Select Metric", weight="bold", margin_top="3", size="3"),
+                    rx.text(
+                        "Select Metric",
+                        weight="bold",
+                        margin_top="4",
+                        size="3",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
+                    ),
                     rx.select(
                         ["lst_mean_c", "heatwave_flag", "uhi_index", "anomaly_zscore", "cdd"],
                         value=State.alert_metric,
@@ -993,7 +1178,13 @@ def alerts_page() -> rx.Component:
                     ),
                     rx.hstack(
                         rx.vstack(
-                            rx.text("Condition", weight="bold", size="3"),
+                            rx.text(
+                                "Condition",
+                                weight="bold",
+                                size="3",
+                                color="#D4D4D4",
+                                font_family="'Inter', 'Segoe UI', sans-serif",
+                            ),
                             rx.select(
                                 [">=", ">", "=", "<", "<="],
                                 value=State.alert_condition,
@@ -1003,7 +1194,13 @@ def alerts_page() -> rx.Component:
                             align_items="start",
                         ),
                         rx.vstack(
-                            rx.text("Threshold", weight="bold", size="3"),
+                            rx.text(
+                                "Threshold",
+                                weight="bold",
+                                size="3",
+                                color="#D4D4D4",
+                                font_family="'Inter', 'Segoe UI', sans-serif",
+                            ),
                             rx.input(
                                 type="number",
                                 value=State.alert_threshold,
@@ -1013,7 +1210,13 @@ def alerts_page() -> rx.Component:
                             align_items="start",
                         ),
                         rx.vstack(
-                            rx.text("Duration (days)", weight="bold", size="3"),
+                            rx.text(
+                                "Duration (days)",
+                                weight="bold",
+                                size="3",
+                                color="#D4D4D4",
+                                font_family="'Inter', 'Segoe UI', sans-serif",
+                            ),
                             rx.input(
                                 type="number",
                                 value=State.alert_duration,
@@ -1024,23 +1227,44 @@ def alerts_page() -> rx.Component:
                         ),
                         spacing="4",
                         width="100%",
-                        margin_top="3",
+                        margin_top="4",
                     ),
-                    rx.text("Risk Level", weight="bold", margin_top="3", size="3"),
+                    rx.text(
+                        "Risk Level",
+                        weight="bold",
+                        margin_top="4",
+                        size="3",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
+                    ),
                     rx.select(
                         ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
                         value=State.alert_severity,
                         on_change=State.set_alert_severity,
                         size="3",
                     ),
-                    rx.text("Notification Channel", weight="bold", margin_top="3", size="3"),
+                    rx.text(
+                        "Notification Channel",
+                        weight="bold",
+                        margin_top="4",
+                        size="3",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
+                    ),
                     rx.select(
                         ["EMAIL", "SLACK", "WEBHOOK"],
                         value=State.alert_channel,
                         on_change=State.set_alert_channel,
                         size="3",
                     ),
-                    rx.text("Recipients", weight="bold", margin_top="3", size="3"),
+                    rx.text(
+                        "Recipients",
+                        weight="bold",
+                        margin_top="4",
+                        size="3",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
+                    ),
                     rx.input(
                         placeholder="Enter recipients",
                         value=State.alert_recipients,
@@ -1050,26 +1274,25 @@ def alerts_page() -> rx.Component:
                     rx.button(
                         "Create Alert",
                         on_click=State.create_alert,
-                        margin_top="4",
+                        margin_top="5",
                         size="3",
                         color_scheme="blue",
                     ),
-                    spacing="2",
+                    spacing="3",
                 ),
                 padding="6",
-                border_radius="lg",
-                border="1px solid",
-                border_color=rx.color("gray", 6),
-                background=rx.color("gray", 1),
-                box_shadow="md",
+                border_radius="6px",
+                border="1px solid #3C3F41",
+                background="#2B2B2B",
             ),
-            spacing="4",
+            spacing="5",
             padding="8",
             max_width="1200px",
             margin="0 auto",
         ),
         width="100%",
-        background=rx.color("gray", 1),
+        background="#1E1E1E",
+        min_height="100vh",
     )
 
 
@@ -1082,24 +1305,33 @@ def regions_page() -> rx.Component:
                 rx.vstack(
                     rx.heading(
                         "Geographic Regions",
-                        size="8",
-                        background_image="linear-gradient(90deg, #10B981 0%, #3B82F6 100%)",
-                        background_clip="text",
+                        size="7",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
+                        font_weight="600",
                     ),
                     rx.text(
                         "Upload and manage custom geographic regions for climate risk analysis",
                         size="3",
-                        color="gray",
+                        color="#A9B7C6",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
                     ),
-                    spacing="2",
+                    spacing="3",
                 ),
                 padding="6",
-                border_radius="lg",
-                background=rx.color("gray", 2),
-                margin_bottom="4",
+                border_radius="6px",
+                background="#2B2B2B",
+                border="1px solid #3C3F41",
+                margin_bottom="6",
             ),
             # Region statistics
-            rx.heading("Region Statistics", size="6", margin_bottom="3"),
+            rx.heading(
+                "Region Statistics",
+                size="6",
+                margin_bottom="4",
+                color="#D4D4D4",
+                font_family="'Inter', 'Segoe UI', sans-serif",
+            ),
             rx.grid(
                 metric_card(
                     "Total Regions", State.region_stats["total"], "Built-in + Custom", "blue"
@@ -1117,12 +1349,25 @@ def regions_page() -> rx.Component:
                 margin_bottom="6",
             ),
             # Region distribution chart
-            rx.heading("Region Distribution", size="6", margin_bottom="3"),
+            rx.heading(
+                "Region Distribution",
+                size="6",
+                margin_bottom="4",
+                color="#D4D4D4",
+                font_family="'Inter', 'Segoe UI', sans-serif",
+            ),
             rx.grid(
                 # Pie chart for region types
                 rx.box(
                     rx.vstack(
-                        rx.text("Region Types", weight="bold", size="3", margin_bottom="2"),
+                        rx.text(
+                            "Region Types",
+                            weight="bold",
+                            size="3",
+                            margin_bottom="3",
+                            color="#D4D4D4",
+                            font_family="'Inter', 'Segoe UI', sans-serif",
+                        ),
                         rx.recharts.pie_chart(
                             rx.recharts.pie(
                                 data=[
@@ -1147,20 +1392,23 @@ def regions_page() -> rx.Component:
                             width="100%",
                             height=250,
                         ),
-                        spacing="2",
+                        spacing="3",
                     ),
                     padding="6",
-                    border_radius="lg",
-                    background=rx.color("gray", 1),
-                    border="1px solid",
-                    border_color=rx.color("gray", 6),
-                    box_shadow="md",
+                    border_radius="6px",
+                    background="#2B2B2B",
+                    border="1px solid #3C3F41",
                 ),
                 # Bar chart for region usage
                 rx.box(
                     rx.vstack(
                         rx.text(
-                            "Data Queries by Region", weight="bold", size="3", margin_bottom="2"
+                            "Data Queries by Region",
+                            weight="bold",
+                            size="3",
+                            margin_bottom="3",
+                            color="#D4D4D4",
+                            font_family="'Inter', 'Segoe UI', sans-serif",
                         ),
                         rx.recharts.bar_chart(
                             rx.recharts.bar(
@@ -1180,14 +1428,12 @@ def regions_page() -> rx.Component:
                             width="100%",
                             height=250,
                         ),
-                        spacing="2",
+                        spacing="3",
                     ),
                     padding="6",
-                    border_radius="lg",
-                    background=rx.color("gray", 1),
-                    border="1px solid",
-                    border_color=rx.color("gray", 6),
-                    box_shadow="md",
+                    border_radius="6px",
+                    background="#2B2B2B",
+                    border="1px solid #3C3F41",
                 ),
                 columns="2",
                 spacing="4",
@@ -1195,17 +1441,40 @@ def regions_page() -> rx.Component:
                 margin_bottom="6",
             ),
             # Built-in regions
-            rx.heading("Built-in Regions", size="6", margin_top="6", margin_bottom="3"),
+            rx.heading(
+                "Built-in Regions",
+                size="6",
+                margin_top="6",
+                margin_bottom="4",
+                color="#D4D4D4",
+                font_family="'Inter', 'Segoe UI', sans-serif",
+            ),
             rx.box(
                 rx.foreach(
                     State.regions,
                     lambda region: rx.box(
                         rx.hstack(
                             rx.vstack(
-                                rx.text(region["name"], weight="bold", size="3"),
-                                rx.text(f"ID: {region['id']}", size="2", color="gray"),
-                                rx.text(f"BBox: {region['bbox']}", size="2", color="gray"),
-                                spacing="1",
+                                rx.text(
+                                    region["name"],
+                                    weight="bold",
+                                    size="3",
+                                    color="#D4D4D4",
+                                    font_family="'Inter', 'Segoe UI', sans-serif",
+                                ),
+                                rx.text(
+                                    f"ID: {region['id']}",
+                                    size="2",
+                                    color="#A9B7C6",
+                                    font_family="'Inter', 'Segoe UI', sans-serif",
+                                ),
+                                rx.text(
+                                    f"BBox: {region['bbox']}",
+                                    size="2",
+                                    color="#A9B7C6",
+                                    font_family="'Inter', 'Segoe UI', sans-serif",
+                                ),
+                                spacing="2",
                                 align_items="start",
                             ),
                             rx.badge("Built-in", color_scheme="green", size="2"),
@@ -1213,15 +1482,12 @@ def regions_page() -> rx.Component:
                             width="100%",
                         ),
                         padding="5",
-                        border_radius="lg",
-                        border="1px solid",
-                        border_color=rx.color("gray", 6),
-                        background=rx.color("gray", 1),
-                        box_shadow="sm",
+                        border_radius="6px",
+                        border="1px solid #3C3F41",
+                        background="#2B2B2B",
                         margin_bottom="3",
                         _hover={
-                            "box_shadow": "md",
-                            "border_color": rx.color("green", 7),
+                            "border_color": "#6A8759",
                             "transform": "translateX(4px)",
                             "transition": "all 0.2s ease-in-out",
                         },
@@ -1230,17 +1496,40 @@ def regions_page() -> rx.Component:
                 ),
             ),
             # Custom regions
-            rx.heading("Custom Regions", size="6", margin_top="6", margin_bottom="3"),
+            rx.heading(
+                "Custom Regions",
+                size="6",
+                margin_top="6",
+                margin_bottom="4",
+                color="#D4D4D4",
+                font_family="'Inter', 'Segoe UI', sans-serif",
+            ),
             rx.box(
                 rx.foreach(
                     State.custom_regions,
                     lambda region: rx.box(
                         rx.hstack(
                             rx.vstack(
-                                rx.text(region["name"], weight="bold", size="3"),
-                                rx.text(f"ID: {region['id']}", size="2", color="gray"),
-                                rx.text(f"Created: {region['created']}", size="2", color="gray"),
-                                spacing="1",
+                                rx.text(
+                                    region["name"],
+                                    weight="bold",
+                                    size="3",
+                                    color="#D4D4D4",
+                                    font_family="'Inter', 'Segoe UI', sans-serif",
+                                ),
+                                rx.text(
+                                    f"ID: {region['id']}",
+                                    size="2",
+                                    color="#A9B7C6",
+                                    font_family="'Inter', 'Segoe UI', sans-serif",
+                                ),
+                                rx.text(
+                                    f"Created: {region['created']}",
+                                    size="2",
+                                    color="#A9B7C6",
+                                    font_family="'Inter', 'Segoe UI', sans-serif",
+                                ),
+                                spacing="2",
                                 align_items="start",
                             ),
                             rx.badge("Custom", color_scheme="purple", size="2"),
@@ -1248,15 +1537,12 @@ def regions_page() -> rx.Component:
                             width="100%",
                         ),
                         padding="5",
-                        border_radius="lg",
-                        border="1px solid",
-                        border_color=rx.color("gray", 6),
-                        background=rx.color("gray", 1),
-                        box_shadow="sm",
+                        border_radius="6px",
+                        border="1px solid #3C3F41",
+                        background="#2B2B2B",
                         margin_bottom="3",
                         _hover={
-                            "box_shadow": "md",
-                            "border_color": rx.color("purple", 7),
+                            "border_color": "#9876AA",
                             "transform": "translateX(4px)",
                             "transition": "all 0.2s ease-in-out",
                         },
@@ -1265,17 +1551,37 @@ def regions_page() -> rx.Component:
                 ),
             ),
             # Upload new region
-            rx.heading("Upload New Region", size="6", margin_top="6", margin_bottom="3"),
+            rx.heading(
+                "Upload New Region",
+                size="6",
+                margin_top="6",
+                margin_bottom="4",
+                color="#D4D4D4",
+                font_family="'Inter', 'Segoe UI', sans-serif",
+            ),
             rx.box(
                 rx.vstack(
-                    rx.text("Region Name", weight="bold", size="3"),
+                    rx.text(
+                        "Region Name",
+                        weight="bold",
+                        size="3",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
+                    ),
                     rx.input(
                         placeholder="Enter region name",
                         value=State.new_region_name,
                         on_change=State.set_new_region_name,
                         size="3",
                     ),
-                    rx.text("Upload GeoJSON", weight="bold", margin_top="3", size="3"),
+                    rx.text(
+                        "Upload GeoJSON",
+                        weight="bold",
+                        margin_top="4",
+                        size="3",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
+                    ),
                     rx.upload(
                         rx.button("Choose File", size="2"),
                         accept={".geojson": []},
@@ -1283,116 +1589,232 @@ def regions_page() -> rx.Component:
                     rx.button(
                         "Upload and Save Region",
                         on_click=State.upload_region,
-                        margin_top="4",
+                        margin_top="5",
                         size="3",
                         color_scheme="green",
                     ),
-                    spacing="2",
+                    spacing="3",
                 ),
                 padding="6",
-                border_radius="lg",
-                border="1px solid",
-                border_color=rx.color("gray", 6),
-                background=rx.color("gray", 1),
-                box_shadow="md",
+                border_radius="6px",
+                border="1px solid #3C3F41",
+                background="#2B2B2B",
             ),
-            spacing="4",
+            spacing="5",
             padding="8",
             max_width="1200px",
             margin="0 auto",
         ),
         width="100%",
-        background=rx.color("gray", 1),
+        background="#1E1E1E",
+        min_height="100vh",
     )
 
 
 def navbar() -> rx.Component:
-    """Navigation bar with enhanced styling."""
+    """Navigation bar with enhanced styling - Raiden/Thunder God themed."""
     return rx.box(
         rx.hstack(
-            rx.heading(
-                "RAYDEN RULES",
-                size="7",
-                background_image="linear-gradient(90deg, #4F46E5 0%, #06B6D4 100%)",
-                background_clip="text",
+            # Title with lightning theme
+            rx.hstack(
+                rx.text(
+                    "⚡",
+                    size="8",
+                    color="#00D9FF",
+                    style={
+                        "text-shadow": "0 0 10px #00D9FF, 0 0 20px #00D9FF, 0 0 30px #00D9FF",
+                        "animation": "pulse 2s ease-in-out infinite",
+                    },
+                ),
+                rx.heading(
+                    "RAYDEN",
+                    size="8",
+                    color="#FFFFFF",
+                    font_family="'Rajdhani', 'Impact', 'Arial Black', sans-serif",
+                    font_weight="900",
+                    letter_spacing="0.1em",
+                    style={
+                        "text-shadow": "0 0 10px #00D9FF, 0 0 20px #4A90E2, 2px 2px 4px rgba(0,0,0,0.8)",
+                        "text-transform": "uppercase",
+                    },
+                ),
+                rx.heading(
+                    "RULES",
+                    size="8",
+                    color="#00D9FF",
+                    font_family="'Rajdhani', 'Impact', 'Arial Black', sans-serif",
+                    font_weight="900",
+                    letter_spacing="0.1em",
+                    style={
+                        "text-shadow": "0 0 10px #00D9FF, 0 0 20px #4A90E2, 2px 2px 4px rgba(0,0,0,0.8)",
+                        "text-transform": "uppercase",
+                    },
+                ),
+                rx.text(
+                    "⚡",
+                    size="8",
+                    color="#00D9FF",
+                    style={
+                        "text-shadow": "0 0 10px #00D9FF, 0 0 20px #00D9FF, 0 0 30px #00D9FF",
+                        "animation": "pulse 2s ease-in-out infinite",
+                    },
+                ),
+                spacing="2",
+                align_items="center",
             ),
             rx.spacer(),
+            # Navigation links with enhanced hover effects
             rx.hstack(
                 rx.link(
                     rx.box(
-                        rx.text("Dashboard", size="3", weight="medium"),
-                        padding="2",
-                        border_radius="md",
+                        rx.hstack(
+                            rx.text("📊", size="3"),
+                            rx.text(
+                                "Dashboard",
+                                size="3",
+                                weight="bold",
+                                color="#E0E0E0",
+                                font_family="'Rajdhani', 'Inter', sans-serif",
+                                letter_spacing="0.05em",
+                            ),
+                            spacing="2",
+                            align_items="center",
+                        ),
+                        padding_x="5",
+                        padding_y="2",
+                        border_radius="6px",
+                        border="2px solid transparent",
                         _hover={
-                            "background": rx.color("blue", 3),
+                            "background": "linear-gradient(135deg, #1a1a2e 0%, #2a2a4e 100%)",
+                            "border_color": "#00D9FF",
                             "transform": "translateY(-2px)",
-                            "transition": "all 0.2s ease-in-out",
+                            "box_shadow": "0 4px 12px rgba(0, 217, 255, 0.4)",
+                            "transition": "all 0.3s ease-in-out",
                         },
-                        transition="all 0.2s ease-in-out",
+                        transition="all 0.3s ease-in-out",
                     ),
                     href="/",
                 ),
                 rx.link(
                     rx.box(
-                        rx.text("Alerts", size="3", weight="medium"),
-                        padding="2",
-                        border_radius="md",
+                        rx.hstack(
+                            rx.text("⚠️", size="3"),
+                            rx.text(
+                                "Alerts",
+                                size="3",
+                                weight="bold",
+                                color="#E0E0E0",
+                                font_family="'Rajdhani', 'Inter', sans-serif",
+                                letter_spacing="0.05em",
+                            ),
+                            spacing="2",
+                            align_items="center",
+                        ),
+                        padding_x="5",
+                        padding_y="2",
+                        border_radius="6px",
+                        border="2px solid transparent",
                         _hover={
-                            "background": rx.color("orange", 3),
+                            "background": "linear-gradient(135deg, #2e1a1a 0%, #4e2a2a 100%)",
+                            "border_color": "#FF6B6B",
                             "transform": "translateY(-2px)",
-                            "transition": "all 0.2s ease-in-out",
+                            "box_shadow": "0 4px 12px rgba(255, 107, 107, 0.4)",
+                            "transition": "all 0.3s ease-in-out",
                         },
-                        transition="all 0.2s ease-in-out",
+                        transition="all 0.3s ease-in-out",
                     ),
                     href="/alerts",
                 ),
                 rx.link(
                     rx.box(
-                        rx.text("Regions", size="3", weight="medium"),
-                        padding="2",
-                        border_radius="md",
+                        rx.hstack(
+                            rx.text("🗺️", size="3"),
+                            rx.text(
+                                "Regions",
+                                size="3",
+                                weight="bold",
+                                color="#E0E0E0",
+                                font_family="'Rajdhani', 'Inter', sans-serif",
+                                letter_spacing="0.05em",
+                            ),
+                            spacing="2",
+                            align_items="center",
+                        ),
+                        padding_x="5",
+                        padding_y="2",
+                        border_radius="6px",
+                        border="2px solid transparent",
                         _hover={
-                            "background": rx.color("green", 3),
+                            "background": "linear-gradient(135deg, #1a2e1a 0%, #2a4e2a 100%)",
+                            "border_color": "#51CF66",
                             "transform": "translateY(-2px)",
-                            "transition": "all 0.2s ease-in-out",
+                            "box_shadow": "0 4px 12px rgba(81, 207, 102, 0.4)",
+                            "transition": "all 0.3s ease-in-out",
                         },
-                        transition="all 0.2s ease-in-out",
+                        transition="all 0.3s ease-in-out",
                     ),
                     href="/regions",
                 ),
-                spacing="4",
+                spacing="3",
             ),
             justify="between",
             width="100%",
             align_items="center",
         ),
-        padding="4",
-        border_bottom="2px solid",
-        border_color=rx.color("gray", 6),
-        background=rx.color("gray", 1),
-        box_shadow="sm",
+        padding_x="8",
+        padding_y="4",
+        border_bottom="2px solid #00D9FF",
+        background="linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+        box_shadow="0 4px 20px rgba(0, 217, 255, 0.3), 0 0 40px rgba(0, 217, 255, 0.1)",
         width="100%",
+        style={
+            "backdrop_filter": "blur(10px)",
+        },
     )
 
 
-app = rx.App()
+app = rx.App(
+    stylesheets=[
+        "https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap",
+    ],
+    style={
+        "@keyframes pulse": {
+            "0%, 100%": {
+                "opacity": "1",
+                "transform": "scale(1)",
+            },
+            "50%": {
+                "opacity": "0.7",
+                "transform": "scale(1.1)",
+            },
+        },
+        "@keyframes lightning-flicker": {
+            "0%, 100%": {
+                "text-shadow": "0 0 10px #00D9FF, 0 0 20px #00D9FF, 0 0 30px #00D9FF",
+            },
+            "50%": {
+                "text-shadow": "0 0 20px #00D9FF, 0 0 40px #4A90E2, 0 0 60px #00D9FF",
+            },
+        },
+    },
+)
 
 # Add pages
 app.add_page(
     lambda: rx.box(navbar(), index_page()),
     route="/",
-    title="Rayden Rules - Dashboard",
+    title="⚡ Rayden Rules - Dashboard",
     on_load=State.on_load,
 )
 
 app.add_page(
     lambda: rx.box(navbar(), alerts_page()),
     route="/alerts",
-    title="Rayden Rules - Alerts",
+    title="⚡ Rayden Rules - Alerts",
 )
 
 app.add_page(
     lambda: rx.box(navbar(), regions_page()),
     route="/regions",
-    title="Rayden Rules - Regions",
+    title="⚡ Rayden Rules - Regions",
 )
