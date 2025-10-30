@@ -16,6 +16,7 @@ python-multipart>=0.0.7
 # Data processing
 pandas>=2.1.0
 numpy>=1.26.0
+pyarrow>=14.0.0  # For parquet support
 # Mapping libraries
 pydeck>=0.8.0
 folium>=0.15.0

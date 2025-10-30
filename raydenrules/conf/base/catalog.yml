@@ -30,9 +30,69 @@ lst_data_mia:
   filepath: data/01_raw/cmr_discovery/MIA001_lst_data.json
   versioned: true
 
+# Bronze layer (intermediate/02_intermediate) - Processed CMR API data stored as parquet
+# Partitioned by region for efficient access
+bronze_granules_partitioned:
+  type: partitions.PartitionedDataset
+  path: data/02_intermediate/granules
+  dataset:
+    type: pandas.ParquetDataset
+    save_args:
+      engine: pyarrow
+      compression: snappy
+    load_args:
+      engine: pyarrow
+  filename_suffix: .parquet
+
+# Consolidated bronze granules table
+bronze_granules_consolidated:
+  type: pandas.ParquetDataset
+  filepath: data/02_intermediate/granules_consolidated.parquet
+  save_args:
+    engine: pyarrow
+    compression: snappy
+  load_args:
+    engine: pyarrow
+  versioned: true
+
+# Bronze manifest - tracks what data has been ingested
+bronze_manifest:
+  type: pandas.ParquetDataset
+  filepath: data/02_intermediate/manifest.parquet
+  save_args:
+    engine: pyarrow
+    compression: snappy
+  load_args:
+    engine: pyarrow
+  versioned: true
+
+# Bronze metadata - information about the ingestion process
+bronze_metadata:
+  type: pandas.ParquetDataset
+  filepath: data/02_intermediate/metadata.parquet
+  save_args:
+    engine: pyarrow
+    compression: snappy
+  load_args:
+    engine: pyarrow
+  versioned: true
+
+# Bronze metrics preparation - ready for silver layer processing
+bronze_metrics_prep:
+  type: partitions.PartitionedDataset
+  path: data/02_intermediate/metrics_prep
+  dataset:
+    type: pandas.ParquetDataset
+    save_args:
+      engine: pyarrow
+      compression: snappy
+    load_args:
+      engine: pyarrow
+  filename_suffix: .parquet
+
 # Processed metrics data that API can access
 metrics_by_region:
-  type: PartitionedDataSet
+  type: partitions.PartitionedDataset
   path: data/03_primary/metrics_by_region
   dataset:
     type: json.JSONDataset

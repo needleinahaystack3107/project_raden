@@ -274,7 +274,7 @@ def get_lst_data(  # noqa: PLR0912, PLR0915
     # Use whatever result we got
     result = final_result
 
-    # Extract relevant information
+    # Extract relevant information with enhanced metadata
     granules_info = {
         "product": used_product,
         "original_request": {
@@ -288,21 +288,39 @@ def get_lst_data(  # noqa: PLR0912, PLR0915
         "actual_data": {"product": used_product, "time_range": used_temporal_range},
         "region": region_bbox,
         "granules": [],
+        "metadata": {
+            "total_hits": result.get("feed", {}).get("totalResults", 0),
+            "returned_count": len(result.get("feed", {}).get("entry", [])),
+            "query_timestamp": datetime.now().isoformat(),
+        },
     }
 
     for granule in result.get("feed", {}).get("entry", []):
-        granules_info["granules"].append(
-            {
-                "id": granule.get("id"),
-                "title": granule.get("title"),
-                "time_start": granule.get("time_start"),
-                "time_end": granule.get("time_end"),
-                "links": [
-                    link for link in granule.get("links", []) if link.get("rel") == "enclosure"
-                ],
-                "cloud_cover": granule.get("cloud_cover", 0),
-            }
-        )
+        # Extract more comprehensive metadata from CMR
+        granule_data = {
+            "id": granule.get("id"),
+            "title": granule.get("title"),
+            "time_start": granule.get("time_start"),
+            "time_end": granule.get("time_end"),
+            "updated": granule.get("updated"),
+            "dataset_id": granule.get("dataset_id"),
+            "data_center": granule.get("data_center"),
+            "granule_size": granule.get("granule_size"),
+            "links": [link for link in granule.get("links", []) if link.get("rel") == "enclosure"],
+            "all_links": granule.get("links", []),  # Keep all links for reference
+            "cloud_cover": granule.get("cloud_cover", 0),
+            "day_night_flag": granule.get("day_night_flag"),
+            "browse_flag": granule.get("browse_flag"),
+            "online_access_flag": granule.get("online_access_flag"),
+        }
+
+        # Extract coordinate information if available
+        if "boxes" in granule:
+            granule_data["boxes"] = granule.get("boxes")
+        if "polygons" in granule:
+            granule_data["polygons"] = granule.get("polygons")
+
+        granules_info["granules"].append(granule_data)
 
     # Add a note if we had to use different parameters than requested
     if params.product != used_product or f"{start_date},{end_date}" != used_temporal_range:

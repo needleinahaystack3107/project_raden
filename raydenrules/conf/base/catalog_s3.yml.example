@@ -1,0 +1,76 @@
+# S3-compatible catalog entries
+# To use S3, set the environment variable: AWS_PROFILE or configure credentials in conf/local/credentials.yml
+# Example usage: kedro run --env=s3
+
+# Override bronze layer datasets to use S3 (bronze = intermediate layer)
+bronze_granules_partitioned:
+  type: PartitionedDataset
+  path: s3://your-bucket-name/raydenrules/intermediate/granules
+  dataset:
+    type: pandas.ParquetDataset
+    save_args:
+      engine: pyarrow
+      compression: snappy
+    load_args:
+      engine: pyarrow
+  filename_suffix: .parquet
+  credentials: dev_s3
+
+bronze_granules_consolidated:
+  type: pandas.ParquetDataset
+  filepath: s3://your-bucket-name/raydenrules/intermediate/granules_consolidated.parquet
+  save_args:
+    engine: pyarrow
+    compression: snappy
+  load_args:
+    engine: pyarrow
+  versioned: true
+  credentials: dev_s3
+
+bronze_manifest:
+  type: pandas.ParquetDataset
+  filepath: s3://your-bucket-name/raydenrules/intermediate/manifest.parquet
+  save_args:
+    engine: pyarrow
+    compression: snappy
+  load_args:
+    engine: pyarrow
+  versioned: true
+  credentials: dev_s3
+
+bronze_metadata:
+  type: pandas.ParquetDataset
+  filepath: s3://your-bucket-name/raydenrules/intermediate/metadata.parquet
+  save_args:
+    engine: pyarrow
+    compression: snappy
+  load_args:
+    engine: pyarrow
+  versioned: true
+  credentials: dev_s3
+
+bronze_metrics_prep:
+  type: PartitionedDataset
+  path: s3://your-bucket-name/raydenrules/intermediate/metrics_prep
+  dataset:
+    type: pandas.ParquetDataset
+    save_args:
+      engine: pyarrow
+      compression: snappy
+    load_args:
+      engine: pyarrow
+  filename_suffix: .parquet
+  credentials: dev_s3
+
+# CMR discovery results can also be stored in S3
+cmr_discovery_results:
+  type: json.JSONDataset
+  filepath: s3://your-bucket-name/raydenrules/intermediate/cmr_discovery_results.json
+  versioned: true
+  credentials: dev_s3
+
+regions_list:
+  type: json.JSONDataset
+  filepath: s3://your-bucket-name/raydenrules/intermediate/regions_list.json
+  versioned: true
+  credentials: dev_s3
