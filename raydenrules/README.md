@@ -5,188 +5,171 @@
 
 ## Overview
 
-Rayden Rules is an advanced climate analytics platform focused on providing actionable insights on urban heat patterns, heatwaves, and climate anomalies. Built on a robust data engineering foundation with Kedro and PySpark, it offers both API access to climate metrics and an intuitive web dashboard for data visualization.
-
-## Long-Term Vision
-
-Our long-term vision for Rayden Rules is to become the comprehensive platform for climate resilience planning, especially focusing on urban heat management and climate adaptation. We aim to:
-
-1. **Expand geographic coverage** to include all major urban centers globally
-2. **Increase temporal resolution** of climate data for more accurate predictions
-3. **Develop advanced AI models** for predicting climate patterns and anomalies
-4. **Create automated alerting systems** for early warning of extreme weather events
-5. **Enable community collaboration** through shared insights and adaptation strategies
-6. **Integrate with city planning tools** to help design climate-resilient urban spaces
-
-## Project Components
-
-Rayden Rules consists of several integrated components:
-
-- **Data Pipeline**: Kedro-powered ETL processes that ingest, transform and prepare climate data
-- **REST API**: FastAPI-based endpoints providing programmatic access to metrics and regions
-- **Web Dashboard**: Streamlit application for interactive data visualization and alerting
-- **Alert System**: Configurable rule-based system for climate event monitoring
-
-## Latest Updates (October 21, 2025)
-
-In our most recent release, we've made significant improvements to the codebase quality and features:
-
-- **Code Quality Improvements**:
-  - Fixed all linting issues identified by Ruff
-  - Replaced magic numbers with meaningful constants
-  - Added proper documentation and type annotations
-  - Improved logging system replacing print statements
-
-- **Feature Enhancements**:
-  - Enhanced API reliability and error handling
-  - Improved visualization components in the dashboard
-  - Added new climate metrics (UHI index, anomaly z-scores)
-  - Expanded test coverage for both API and UI components
+Rayden Rules is an advanced climate analytics platform focused on urban heat patterns, heatwaves, and climate anomalies. Built with Kedro, FastAPI, and Reflex, it provides both API access and an interactive web dashboard for climate data visualization and risk monitoring.
 
 ## Architecture
 
-The project follows a modular architecture with clear separation of concerns:
-
 ```
 raydenrules/
-├── api/         # FastAPI endpoints for data access
-├── app/         # Streamlit dashboard application
-│   ├── components/  # Reusable UI components
-│   ├── pages/       # Dashboard pages (map, alerts, regions)
-│   └── utils/       # Helper functions
-└── pipelines/   # Kedro data processing pipelines
+├── src/raydenrules/
+│   ├── api/              # FastAPI REST endpoints
+│   ├── app/              # Reflex web application
+│   │   └── reflex_app/   # Main application module
+│   └── pipelines/        # Kedro data pipelines
+├── data/                 # Data storage (raw, processed)
+├── conf/                 # Configuration files
+└── tests/                # Test suite
 ```
 
-## Installation & Setup
+## Quick Start
 
 ### Prerequisites
 - Python 3.10+
-- PySpark 3.3+
-- Docker (optional, for containerized deployment)
+- Virtual environment activated
 
 ### Installation
 
-1. Clone the repository:
-   ```
-   git clone https://github.com/your-organization/raydenrules.git
-   cd raydenrules
-   ```
-
-2. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-
-3. Set up local configuration:
-   ```
-   cp conf/base/credentials.yml conf/local/credentials.yml
-   # Edit conf/local/credentials.yml with your API keys and database credentials
-   ```
-
-## Running the Project
-
-### Data Pipeline
-
-Run the full data processing pipeline:
+```bash
+pip install -r requirements.txt
 ```
+
+## Running the Application
+
+### 1. Start the Backend API
+
+```bash
+cd src/raydenrules/api
+./start_api.sh
+```
+
+Access at: **http://localhost:8000**
+API Docs: **http://localhost:8000/docs**
+
+### 2. Start the Frontend
+
+```bash
+cd src/raydenrules/app
+./start_app.sh
+```
+
+Access at: **http://localhost:3000**
+
+## Features
+
+### Dashboard
+- **Region Selection**: Choose from built-in regions (NYC, LA, Chicago, Miami)
+- **Date Range Picker**: Select custom time periods
+- **KPI Cards**: Temperature, Heatwave Days, Energy Demand, Anomaly Index
+- **Interactive Charts**: Line, Bar, and Area charts with multiple variables
+
+### Alerts
+- **View Alerts**: Monitor configured climate risk alerts
+- **Create Alerts**: Set custom thresholds and notification rules
+- **Severity Levels**: LOW, MEDIUM, HIGH, CRITICAL
+- **Notification Channels**: Email, Slack, Webhook
+
+### Regions
+- **Built-in Regions**: Pre-configured major urban areas
+- **Custom Regions**: Upload GeoJSON files for custom areas
+- **Region Management**: View and manage geographic areas
+
+## Data Pipeline
+
+
+Run Kedro pipelines:
+```bash
 kedro run
 ```
 
-Run specific pipeline nodes:
-```
+Run specific pipelines:
+```bash
 kedro run --pipeline=data_processing
-kedro run --pipeline=feature_engineering
 ```
 
-### API Server
+## API Endpoints
 
-Start the FastAPI server:
-```
-python -m src.raydenrules.api.api
-```
+### Regions
+- `GET /v1/regions` - List available regions
+- `POST /v1/regions` - Upload custom region (GeoJSON)
 
-The API will be available at `http://localhost:8000` with documentation at `http://localhost:8000/docs`.
+### Metrics
+- `GET /v1/metrics` - Get climate metrics
+  - Parameters: `region_id`, `from_date`, `to_date`, `vars`
 
-### Web Dashboard
+### Alerts
+- `POST /v1/alerts` - Create alert rule
 
-Launch the Streamlit dashboard:
-```
-streamlit run src/raydenrules/app/app.py
-```
-
-The dashboard will be accessible at `http://localhost:8501`.
+### Tiles
+- `GET /v1/tiles/{layer}/{z}/{x}/{y}.png` - Map tiles
 
 ## Testing
 
 Run all tests:
-```
+```bash
 pytest
 ```
 
 Run specific test suites:
-```
+```bash
 pytest tests/api/
 pytest tests/ui/
 ```
 
-### API Testing
+## Development
 
-For manual API testing, you can use the provided script:
-```
-python tests/api/manual_api_test.py
-```
-
-## Documentation
-
-Generate project documentation:
-```
-kedro build-docs
+### Code Quality
+```bash
+ruff check .
+black --check .
 ```
 
-View the documentation by opening `docs/build/html/index.html` in your browser.
-
-## How to install dependencies
-
-Declare any dependencies in `requirements.txt` for `pip` installation.
-
-To install them, run:
-
-```
-pip install -r requirements.txt
+### Auto-format
+```bash
+ruff check --fix .
+black .
 ```
 
-## How to run your Kedro pipeline
+## Configuration
 
-You can run your Kedro project with:
+Configuration files are in `conf/`:
+- `base/` - Default configuration
+- `local/` - Local overrides (git-ignored)
 
-```
-kedro run
-```
+## Project Structure
 
-## How to test your Kedro project
+- **data/** - Data layers (01_raw → 08_reporting)
+- **conf/** - Configuration (YAML files)
+- **src/raydenrules/** - Source code
+- **tests/** - Test suite
+- **notebooks/** - Jupyter notebooks
 
-Have a look at the files `tests/test_run.py` and `tests/pipelines/data_science/test_pipeline.py` for instructions on how to write your tests. Run the tests as follows:
+## Technology Stack
 
-```
-pytest
-```
+- **Backend**: FastAPI, Uvicorn
+- **Frontend**: Reflex (React-based)
+- **Data Pipeline**: Kedro, PySpark
+- **Data Processing**: Pandas, NumPy
+- **Code Quality**: Ruff, Black
 
-You can configure the coverage threshold in your project's `pyproject.toml` file under the `[tool.coverage.report]` section.
+## Latest Updates
 
-## Project dependencies
+**October 30, 2025**
+- ✅ Migrated from Streamlit to Reflex
+- ✅ Simplified project structure
+- ✅ Fixed all Reflex compatibility issues
+- ✅ Cleaned up documentation
+- ✅ Removed test scripts and backup files
 
-To see and update the dependency requirements for your project use `requirements.txt`. Install the project requirements with `pip install -r requirements.txt`.
+## Contributing
 
-[Further information about project dependencies](https://docs.kedro.org/en/stable/kedro_project_setup/dependencies.html#project-specific-dependencies)
+1. Follow code style guidelines (Ruff + Black)
+2. Add tests for new features
+3. Update documentation
+4. Run tests before committing
 
-## How to work with Kedro and notebooks
+## License
 
-> Note: Using `kedro jupyter` or `kedro ipython` to run your notebook provides these variables in scope: `catalog`, `context`, `pipelines` and `session`.
->
-> Jupyter, JupyterLab, and IPython are already included in the project requirements by default, so once you have run `pip install -r requirements.txt` you will not need to take any extra steps before you use them.
-
-### Jupyter
-To use Jupyter notebooks in your Kedro project, you need to install Jupyter:
+See LICENSE file for details.
 
 ```
 pip install jupyter
