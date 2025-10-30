@@ -90,8 +90,23 @@ bronze_metrics_prep:
       engine: pyarrow
   filename_suffix: .parquet
 
+# Silver layer (intermediate/02_intermediate) - Processed metrics with LST data
+# Partitioned by region with calculated climate metrics
+silver_metrics_partitioned:
+  type: partitions.PartitionedDataset
+  path: data/02_intermediate/silver_metrics
+  dataset:
+    type: pandas.ParquetDataset
+    save_args:
+      engine: pyarrow
+      compression: snappy
+    load_args:
+      engine: pyarrow
+  filename_suffix: .parquet
+
+# Primary layer (03_primary) - API-ready metrics data
 # Processed metrics data that API can access
-metrics_by_region:
+primary_metrics_by_region:
   type: partitions.PartitionedDataset
   path: data/03_primary/metrics_by_region
   dataset:

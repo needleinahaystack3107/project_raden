@@ -32,6 +32,9 @@ CONFIG_LOADER_ARGS = {
     "default_run_env": "local",
     "config_patterns": {
         "spark": ["spark*", "spark*/**"],
+        "parameters": ["parameters*", "parameters*/**"],
+        "credentials": ["credentials*", "credentials*/**"],
+        "globals": ["globals*", "globals*/**"],
     },
 }
 

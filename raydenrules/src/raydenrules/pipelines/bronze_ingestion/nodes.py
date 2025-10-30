@@ -74,8 +74,8 @@ def prepare_bronze_granules(cmr_discovery_results: dict) -> dict[str, pd.DataFra
                 "bbox_east": lst_data.get("region", [None, None, None, None])[2],
                 "bbox_north": lst_data.get("region", [None, None, None, None])[3],
                 "ingestion_timestamp": datetime.now().isoformat(),
-                # Store links as JSON string for bronze layer
-                "links": str(granule.get("links", [])),
+                # Store all_links as JSON string for bronze layer (contains download URLs)
+                "links": str(granule.get("all_links", granule.get("links", []))),
             }
             granule_records.append(record)
 

@@ -24,25 +24,48 @@ discovery:
     provider: null     # Don't restrict provider to get more results
     page_size: 100
 
-# UI configuration parameters
-ui:
-  default_region: "NYC001"  # Default region to display
-  default_date_range:
-    start: "2023-10-01"
-    end: "2023-10-31"
-  map_layers:
-    - name: "Land Surface Temperature"
-      id: "lst"
-      color_scale: "Viridis"
-    - name: "Anomaly"
-      id: "anomaly"
-      color_scale: "RdBu_r"
-    - name: "Heatwave Flag"
-      id: "heatwave_flag"
-      color_scale: "YlOrRd"
-    - name: "Urban Heat Island"
-      id: "uhi"
-      color_scale: "Plasma"
-    - name: "CDD/HDD"
-      id: "degree_days"
-      color_scale: "coolwarm"
+# Silver layer processing parameters
+silver:
+  # Whether to actually download HDF files from NASA (False for testing with mock data)
+  enable_download: true
+
+  # Directory to store downloaded HDF files
+  download_dir: "data/01_raw/nasa_granules"
+
+  # NASA Earthdata authentication token (optional, required for downloads)
+  # Get token from: https://urs.earthdata.nasa.gov/
+  # IMPORTANT: Override this in conf/local/parameters.yml for security (git-ignored)
+  nasa_auth_token: "eyJ0eXAiOiJKV1QiLCJvcmlnaW4iOiJFYXJ0aGRhdGEgTG9naW4iLCJzaWciOiJlZGxqd3RwdWJrZXlfb3BzIiwiYWxnIjoiUlMyNTYifQ.eyJ0eXBlIjoiVXNlciIsInVpZCI6ImFiaGlqaXRoYXJpZGFzMzEwNyIsImV4cCI6MTc2NzA0MTE2NCwiaWF0IjoxNzYxODU3MTY0LCJpc3MiOiJodHRwczovL3Vycy5lYXJ0aGRhdGEubmFzYS5nb3YiLCJpZGVudGl0eV9wcm92aWRlciI6ImVkbF9vcHMiLCJhY3IiOiJlZGwiLCJhc3N1cmFuY2VfbGV2ZWwiOjN9.yzQ5r33qdJoYsIACdjq6iovAraVJN6TKdxH05lwDG8TlqhS3GtSnTuzZO2OxTJejStRyjeu437i4Hjo3HGKMXXFs6xTCr-3trmR05c_dAlzGeGMl9Qo-j9D68-BCnYLWZjxT107Mgyz37e7Q4gW9uWvNTQDmZkx7ymIkj9SSRwnxuqH160_dtux57ZzFm859NiiZE8OVtAebpqlUBKAzE9bLwKBbdEx5_87HF_QB4cUzEHKBo8nVG34eeJ94l7Esc1ffaYNSYEyxQIocmsfdvThfa1DYi2soNX2AbhPwM21N4h_dGDTDYP-CXyXe1SEv8vXuilkcumsQm9EYz2bL8g"
+
+  # Processing options
+  base_temperature: 18.0  # Base temperature for degree days calculation (Celsius)
+  heatwave_threshold: 32.0  # Temperature threshold for heatwave detection (Celsius)
+  heatwave_consecutive_days: 3  # Minimum consecutive days for heatwave flag
+  rural_baseline_temp: 20.0  # Rural baseline temperature for UHI calculation (Celsius)
+
+  # Data quality thresholds
+  cloud_cover_threshold: 50.0  # Maximum acceptable cloud cover percentage
+  min_valid_pixels: 100  # Minimum valid pixels required for LST extraction
+
+# TODO: Remove this UI configuration parameters - OBSOLETE, handled in separate UI config file
+#ui:
+#  default_region: "NYC001"  # Default region to display
+#  default_date_range:
+#    start: "2023-10-01"
+#    end: "2023-10-31"
+#  map_layers:
+#    - name: "Land Surface Temperature"
+#      id: "lst"
+#      color_scale: "Viridis"
+#    - name: "Anomaly"
+#      id: "anomaly"
+#      color_scale: "RdBu_r"
+#    - name: "Heatwave Flag"
+#      id: "heatwave_flag"
+#      color_scale: "YlOrRd"
+#    - name: "Urban Heat Island"
+#      id: "uhi"
+#      color_scale: "Plasma"
+#    - name: "CDD/HDD"
+#      id: "degree_days"
+#      color_scale: "coolwarm"

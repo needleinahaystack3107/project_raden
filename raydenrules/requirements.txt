@@ -21,6 +21,10 @@ pyarrow>=14.0.0  # For parquet support
 pydeck>=0.8.0
 folium>=0.15.0
 geopandas>=0.14.0
+# Raster processing for NASA HDF files
+rasterio>=1.3.0
+GDAL>=3.4.0
+requests>=2.31.0
 # AWS integrations
 boto3>=1.34.0
 # Testing and development
