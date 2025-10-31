@@ -61,6 +61,8 @@ class State(rx.State):
     alert_severity: str = "LOW"
     alert_channel: str = "EMAIL"
     alert_recipients: str = ""
+    alert_start_date: str = (date.today() - timedelta(days=30)).strftime("%Y-%m-%d")
+    alert_end_date: str = date.today().strftime("%Y-%m-%d")
 
     # Region management (for regions page)
     custom_regions: list[dict[str, Any]] = []
@@ -279,6 +281,14 @@ class State(rx.State):
     def set_alert_recipients(self, value: str):
         """Set alert recipients."""
         self.alert_recipients = value
+
+    def set_alert_start_date(self, new_date: str):
+        """Update alert start date."""
+        self.alert_start_date = new_date
+
+    def set_alert_end_date(self, new_date: str):
+        """Update alert end date."""
+        self.alert_end_date = new_date
 
     def load_alerts(self):
         """Load existing alerts."""
@@ -995,6 +1005,77 @@ def alerts_page() -> rx.Component:
                 border="1px solid #3C3F41",
                 margin_bottom="6",
             ),
+            # Date filters for alerts
+            rx.box(
+                rx.vstack(
+                    rx.heading(
+                        "Alert Filters",
+                        size="5",
+                        color="#D4D4D4",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
+                        margin_bottom="3",
+                    ),
+                    rx.hstack(
+                        rx.vstack(
+                            rx.text(
+                                "From Date:",
+                                size="2",
+                                color="#A9B7C6",
+                                font_family="'Inter', 'Segoe UI', sans-serif",
+                            ),
+                            rx.input(
+                                type="date",
+                                value=State.alert_start_date,
+                                on_change=State.set_alert_start_date,
+                                size="2",
+                            ),
+                            align_items="start",
+                            spacing="1",
+                        ),
+                        rx.vstack(
+                            rx.text(
+                                "To Date:",
+                                size="2",
+                                color="#A9B7C6",
+                                font_family="'Inter', 'Segoe UI', sans-serif",
+                            ),
+                            rx.input(
+                                type="date",
+                                value=State.alert_end_date,
+                                on_change=State.set_alert_end_date,
+                                size="2",
+                            ),
+                            align_items="start",
+                            spacing="1",
+                        ),
+                        rx.vstack(
+                            rx.text(
+                                "Date Range:",
+                                size="2",
+                                weight="medium",
+                                color="#D4D4D4",
+                                font_family="'Inter', 'Segoe UI', sans-serif",
+                            ),
+                            rx.badge(
+                                f"{State.alert_start_date} to {State.alert_end_date}",
+                                color_scheme="cyan",
+                                size="2",
+                            ),
+                            align_items="start",
+                            spacing="1",
+                        ),
+                        spacing="5",
+                        align_items="end",
+                        width="100%",
+                    ),
+                    spacing="3",
+                ),
+                padding="5",
+                border_radius="6px",
+                background="#2B2B2B",
+                border="1px solid #3C3F41",
+                margin_bottom="6",
+            ),
             # Alert statistics
             rx.heading(
                 "Alert Statistics",
@@ -1017,9 +1098,215 @@ def alerts_page() -> rx.Component:
                 width="100%",
                 margin_bottom="6",
             ),
-            # Alert trend chart
+            # Two-column layout: Charts and Instructions
+            rx.grid(
+                # Left column - Alert trend chart
+                rx.box(
+                    rx.vstack(
+                        rx.heading(
+                            "Alert Frequency Trend",
+                            size="6",
+                            margin_bottom="3",
+                            color="#D4D4D4",
+                            font_family="'Inter', 'Segoe UI', sans-serif",
+                        ),
+                        rx.text(
+                            "Alert triggers over the past 30 days",
+                            size="2",
+                            color="#A9B7C6",
+                            font_family="'Inter', 'Segoe UI', sans-serif",
+                            margin_bottom="3",
+                        ),
+                        rx.recharts.bar_chart(
+                            rx.recharts.bar(
+                                data_key="count",
+                                fill="#EF4444",
+                                name="Alerts Triggered",
+                            ),
+                            rx.recharts.x_axis(
+                                data_key="date", angle=-45, text_anchor="end", height=80
+                            ),
+                            rx.recharts.y_axis(
+                                label={"value": "Count", "angle": -90, "position": "insideLeft"}
+                            ),
+                            rx.recharts.cartesian_grid(stroke_dasharray="3 3", opacity=0.3),
+                            rx.recharts.legend(),
+                            rx.recharts.tooltip(),
+                            data=[
+                                {"date": "Oct 1", "count": 3},
+                                {"date": "Oct 5", "count": 5},
+                                {"date": "Oct 10", "count": 2},
+                                {"date": "Oct 15", "count": 7},
+                                {"date": "Oct 20", "count": 4},
+                                {"date": "Oct 25", "count": 6},
+                                {"date": "Oct 30", "count": 3},
+                            ],
+                            width="100%",
+                            height=350,
+                        ),
+                        spacing="3",
+                    ),
+                    padding="6",
+                    border_radius="6px",
+                    background="#2B2B2B",
+                    border="1px solid #3C3F41",
+                ),
+                # Right column - How to Use Instructions
+                rx.box(
+                    rx.vstack(
+                        rx.heading(
+                            "🔔 How to Set Up Alerts",
+                            size="6",
+                            margin_bottom="3",
+                            color="#D4D4D4",
+                            font_family="'Inter', 'Segoe UI', sans-serif",
+                        ),
+                        rx.vstack(
+                            rx.hstack(
+                                rx.text(
+                                    "1", size="5", weight="bold", color="#00D9FF", width="30px"
+                                ),
+                                rx.vstack(
+                                    rx.text(
+                                        "Name Your Alert",
+                                        weight="bold",
+                                        size="3",
+                                        color="#D4D4D4",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    rx.text(
+                                        "Choose a descriptive name that clearly identifies the risk you're monitoring.",
+                                        size="2",
+                                        color="#A9B7C6",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    align_items="start",
+                                    spacing="1",
+                                ),
+                                align_items="start",
+                                spacing="3",
+                                width="100%",
+                            ),
+                            rx.divider(border_color="#3C3F41"),
+                            rx.hstack(
+                                rx.text(
+                                    "2", size="5", weight="bold", color="#00D9FF", width="30px"
+                                ),
+                                rx.vstack(
+                                    rx.text(
+                                        "Select Metric & Threshold",
+                                        weight="bold",
+                                        size="3",
+                                        color="#D4D4D4",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    rx.text(
+                                        "Pick a climate metric (temperature, z-score, UHI, etc.) and set the threshold value that triggers an alert.",
+                                        size="2",
+                                        color="#A9B7C6",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    align_items="start",
+                                    spacing="1",
+                                ),
+                                align_items="start",
+                                spacing="3",
+                                width="100%",
+                            ),
+                            rx.divider(border_color="#3C3F41"),
+                            rx.hstack(
+                                rx.text(
+                                    "3", size="5", weight="bold", color="#00D9FF", width="30px"
+                                ),
+                                rx.vstack(
+                                    rx.text(
+                                        "Set Duration & Severity",
+                                        weight="bold",
+                                        size="3",
+                                        color="#D4D4D4",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    rx.text(
+                                        "Specify how many consecutive days the condition must persist, and assign a severity level (LOW, MEDIUM, HIGH, CRITICAL).",
+                                        size="2",
+                                        color="#A9B7C6",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    align_items="start",
+                                    spacing="1",
+                                ),
+                                align_items="start",
+                                spacing="3",
+                                width="100%",
+                            ),
+                            rx.divider(border_color="#3C3F41"),
+                            rx.hstack(
+                                rx.text(
+                                    "4", size="5", weight="bold", color="#00D9FF", width="30px"
+                                ),
+                                rx.vstack(
+                                    rx.text(
+                                        "Configure Notifications",
+                                        weight="bold",
+                                        size="3",
+                                        color="#D4D4D4",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    rx.text(
+                                        "Choose your notification channel (Email, Slack, Webhook) and enter recipient details.",
+                                        size="2",
+                                        color="#A9B7C6",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    align_items="start",
+                                    spacing="1",
+                                ),
+                                align_items="start",
+                                spacing="3",
+                                width="100%",
+                            ),
+                            rx.divider(border_color="#3C3F41"),
+                            rx.box(
+                                rx.vstack(
+                                    rx.text(
+                                        "💡 Pro Tips",
+                                        weight="bold",
+                                        size="3",
+                                        color="#FFC66D",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    rx.text(
+                                        "• Use anomaly_zscore for early warning signs\n• Set duration > 1 to avoid false positives\n• CRITICAL alerts for immediate action items\n• Test with low thresholds before deploying",
+                                        size="2",
+                                        color="#A9B7C6",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                        white_space="pre-wrap",
+                                    ),
+                                    align_items="start",
+                                    spacing="2",
+                                ),
+                                padding="4",
+                                border_radius="6px",
+                                background="rgba(255, 198, 109, 0.1)",
+                                border="1px solid rgba(255, 198, 109, 0.3)",
+                            ),
+                            spacing="4",
+                        ),
+                        spacing="4",
+                    ),
+                    padding="6",
+                    border_radius="6px",
+                    background="#2B2B2B",
+                    border="1px solid #3C3F41",
+                ),
+                columns="2",
+                spacing="4",
+                width="100%",
+                margin_bottom="6",
+            ),
+            # Alert severity distribution chart
             rx.heading(
-                "Alert Frequency Trend",
+                "Alert Distribution by Severity",
                 size="6",
                 margin_bottom="4",
                 color="#D4D4D4",
@@ -1028,33 +1315,29 @@ def alerts_page() -> rx.Component:
             rx.box(
                 rx.vstack(
                     rx.text(
-                        "Alert triggers over the past 30 days",
+                        "Breakdown of alerts by severity level",
                         size="2",
                         color="#A9B7C6",
                         font_family="'Inter', 'Segoe UI', sans-serif",
                         margin_bottom="3",
                     ),
-                    rx.recharts.bar_chart(
-                        rx.recharts.bar(
-                            data_key="count",
-                            fill="#EF4444",
+                    rx.recharts.pie_chart(
+                        rx.recharts.pie(
+                            data=[
+                                {"name": "Critical", "value": 2, "fill": "#EF4444"},
+                                {"name": "High", "value": 3, "fill": "#F59E0B"},
+                                {"name": "Medium", "value": 5, "fill": "#FFC66D"},
+                                {"name": "Low", "value": 4, "fill": "#10B981"},
+                            ],
+                            data_key="value",
+                            name_key="name",
+                            cx="50%",
+                            cy="50%",
+                            label=True,
                         ),
-                        rx.recharts.x_axis(data_key="date"),
-                        rx.recharts.y_axis(),
-                        rx.recharts.cartesian_grid(stroke_dasharray="3 3"),
                         rx.recharts.legend(),
-                        rx.recharts.tooltip(),
-                        data=[
-                            {"date": "Oct 1", "count": 3},
-                            {"date": "Oct 5", "count": 5},
-                            {"date": "Oct 10", "count": 2},
-                            {"date": "Oct 15", "count": 7},
-                            {"date": "Oct 20", "count": 4},
-                            {"date": "Oct 25", "count": 6},
-                            {"date": "Oct 30", "count": 3},
-                        ],
                         width="100%",
-                        height=250,
+                        height=300,
                     ),
                     spacing="3",
                 ),
@@ -1285,9 +1568,42 @@ def alerts_page() -> rx.Component:
                 border="1px solid #3C3F41",
                 background="#2B2B2B",
             ),
+            # Footer
+            rx.divider(margin_top="8", border_color="#00D9FF", opacity="0.3"),
+            rx.center(
+                rx.hstack(
+                    rx.text("⚡", size="2", color="#00D9FF"),
+                    rx.text(
+                        "RAYDEN RULES™",
+                        size="2",
+                        weight="bold",
+                        color="#00D9FF",
+                        font_family="'Rajdhani', sans-serif",
+                        letter_spacing="0.1em",
+                    ),
+                    rx.text("|", size="2", color="#666"),
+                    rx.text(
+                        "Climate Risk Intelligence Platform",
+                        size="2",
+                        color="#999",
+                        font_family="'Rajdhani', sans-serif",
+                    ),
+                    rx.text("|", size="2", color="#666"),
+                    rx.text(
+                        "© 2025",
+                        size="2",
+                        color="#666",
+                        font_family="'Rajdhani', sans-serif",
+                    ),
+                    rx.text("⚡", size="2", color="#00D9FF"),
+                    spacing="2",
+                    align_items="center",
+                ),
+                padding_y="4",
+            ),
             spacing="5",
             padding="8",
-            max_width="1200px",
+            max_width="1400px",
             margin="0 auto",
         ),
         width="100%",
@@ -1348,22 +1664,22 @@ def regions_page() -> rx.Component:
                 width="100%",
                 margin_bottom="6",
             ),
-            # Region distribution chart
+            # Two-column layout: Charts and Instructions
             rx.heading(
-                "Region Distribution",
+                "Region Analytics",
                 size="6",
                 margin_bottom="4",
                 color="#D4D4D4",
                 font_family="'Inter', 'Segoe UI', sans-serif",
             ),
             rx.grid(
-                # Pie chart for region types
+                # Left column - Region types pie chart (larger)
                 rx.box(
                     rx.vstack(
                         rx.text(
-                            "Region Types",
+                            "Region Types Distribution",
                             weight="bold",
-                            size="3",
+                            size="4",
                             margin_bottom="3",
                             color="#D4D4D4",
                             font_family="'Inter', 'Segoe UI', sans-serif",
@@ -1390,7 +1706,7 @@ def regions_page() -> rx.Component:
                             ),
                             rx.recharts.legend(),
                             width="100%",
-                            height=250,
+                            height=350,
                         ),
                         spacing="3",
                     ),
@@ -1399,36 +1715,148 @@ def regions_page() -> rx.Component:
                     background="#2B2B2B",
                     border="1px solid #3C3F41",
                 ),
-                # Bar chart for region usage
+                # Right column - How to Upload Instructions
                 rx.box(
                     rx.vstack(
-                        rx.text(
-                            "Data Queries by Region",
-                            weight="bold",
-                            size="3",
+                        rx.heading(
+                            "🗺️ How to Upload Custom Regions",
+                            size="6",
                             margin_bottom="3",
                             color="#D4D4D4",
                             font_family="'Inter', 'Segoe UI', sans-serif",
                         ),
-                        rx.recharts.bar_chart(
-                            rx.recharts.bar(
-                                data_key="queries",
-                                fill="#10B981",
+                        rx.vstack(
+                            rx.hstack(
+                                rx.text(
+                                    "1", size="5", weight="bold", color="#00D9FF", width="30px"
+                                ),
+                                rx.vstack(
+                                    rx.text(
+                                        "Prepare GeoJSON File",
+                                        weight="bold",
+                                        size="3",
+                                        color="#D4D4D4",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    rx.text(
+                                        "Create or export a GeoJSON file with your region boundaries. Ensure it includes valid coordinates and geometry.",
+                                        size="2",
+                                        color="#A9B7C6",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    align_items="start",
+                                    spacing="1",
+                                ),
+                                align_items="start",
+                                spacing="3",
+                                width="100%",
                             ),
-                            rx.recharts.x_axis(data_key="name"),
-                            rx.recharts.y_axis(),
-                            rx.recharts.cartesian_grid(stroke_dasharray="3 3"),
-                            rx.recharts.tooltip(),
-                            data=[
-                                {"name": "NYC", "queries": 245},
-                                {"name": "LAX", "queries": 189},
-                                {"name": "CHI", "queries": 156},
-                                {"name": "MIA", "queries": 134},
-                            ],
-                            width="100%",
-                            height=250,
+                            rx.divider(border_color="#3C3F41"),
+                            rx.hstack(
+                                rx.text(
+                                    "2", size="5", weight="bold", color="#00D9FF", width="30px"
+                                ),
+                                rx.vstack(
+                                    rx.text(
+                                        "Name Your Region",
+                                        weight="bold",
+                                        size="3",
+                                        color="#D4D4D4",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    rx.text(
+                                        "Enter a descriptive name for easy identification in dropdown menus and reports.",
+                                        size="2",
+                                        color="#A9B7C6",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    align_items="start",
+                                    spacing="1",
+                                ),
+                                align_items="start",
+                                spacing="3",
+                                width="100%",
+                            ),
+                            rx.divider(border_color="#3C3F41"),
+                            rx.hstack(
+                                rx.text(
+                                    "3", size="5", weight="bold", color="#00D9FF", width="30px"
+                                ),
+                                rx.vstack(
+                                    rx.text(
+                                        "Upload & Validate",
+                                        weight="bold",
+                                        size="3",
+                                        color="#D4D4D4",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    rx.text(
+                                        "Click 'Choose File' to select your GeoJSON, then 'Upload and Save Region'. The system will validate coordinates and create a bounding box.",
+                                        size="2",
+                                        color="#A9B7C6",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    align_items="start",
+                                    spacing="1",
+                                ),
+                                align_items="start",
+                                spacing="3",
+                                width="100%",
+                            ),
+                            rx.divider(border_color="#3C3F41"),
+                            rx.hstack(
+                                rx.text(
+                                    "4", size="5", weight="bold", color="#00D9FF", width="30px"
+                                ),
+                                rx.vstack(
+                                    rx.text(
+                                        "Start Analyzing",
+                                        weight="bold",
+                                        size="3",
+                                        color="#D4D4D4",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    rx.text(
+                                        "Your custom region will appear in the Dashboard's region selector and can be used for all climate risk analyses.",
+                                        size="2",
+                                        color="#A9B7C6",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    align_items="start",
+                                    spacing="1",
+                                ),
+                                align_items="start",
+                                spacing="3",
+                                width="100%",
+                            ),
+                            rx.divider(border_color="#3C3F41"),
+                            rx.box(
+                                rx.vstack(
+                                    rx.text(
+                                        "📍 GeoJSON Tips",
+                                        weight="bold",
+                                        size="3",
+                                        color="#51CF66",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                    ),
+                                    rx.text(
+                                        "• Use WGS84 (EPSG:4326) coordinate system\n• Keep file size < 5MB for best performance\n• Polygon or MultiPolygon geometries work best\n• Export from QGIS, ArcGIS, or geojson.io",
+                                        size="2",
+                                        color="#A9B7C6",
+                                        font_family="'Inter', 'Segoe UI', sans-serif",
+                                        white_space="pre-wrap",
+                                    ),
+                                    align_items="start",
+                                    spacing="2",
+                                ),
+                                padding="4",
+                                border_radius="6px",
+                                background="rgba(81, 207, 102, 0.1)",
+                                border="1px solid rgba(81, 207, 102, 0.3)",
+                            ),
+                            spacing="4",
                         ),
-                        spacing="3",
+                        spacing="4",
                     ),
                     padding="6",
                     border_radius="6px",
@@ -1438,6 +1866,58 @@ def regions_page() -> rx.Component:
                 columns="2",
                 spacing="4",
                 width="100%",
+                margin_bottom="6",
+            ),
+            # Data queries by region - Full width chart
+            rx.heading(
+                "Region Usage Metrics",
+                size="6",
+                margin_bottom="4",
+                color="#D4D4D4",
+                font_family="'Inter', 'Segoe UI', sans-serif",
+            ),
+            rx.box(
+                rx.vstack(
+                    rx.text(
+                        "Number of data queries per region (last 30 days)",
+                        weight="medium",
+                        size="3",
+                        margin_bottom="3",
+                        color="#A9B7C6",
+                        font_family="'Inter', 'Segoe UI', sans-serif",
+                    ),
+                    rx.recharts.bar_chart(
+                        rx.recharts.bar(
+                            data_key="queries",
+                            fill="#10B981",
+                            name="Data Queries",
+                        ),
+                        rx.recharts.x_axis(
+                            data_key="name",
+                            label={"value": "Region", "position": "insideBottom", "offset": -5},
+                        ),
+                        rx.recharts.y_axis(
+                            label={"value": "Query Count", "angle": -90, "position": "insideLeft"}
+                        ),
+                        rx.recharts.cartesian_grid(stroke_dasharray="3 3", opacity=0.3),
+                        rx.recharts.tooltip(),
+                        rx.recharts.legend(),
+                        data=[
+                            {"name": "New York City", "queries": 245},
+                            {"name": "Los Angeles", "queries": 189},
+                            {"name": "Chicago", "queries": 156},
+                            {"name": "Miami", "queries": 134},
+                            {"name": "Downtown Manhattan", "queries": 87},
+                        ],
+                        width="100%",
+                        height=350,
+                    ),
+                    spacing="3",
+                ),
+                padding="6",
+                border_radius="6px",
+                background="#2B2B2B",
+                border="1px solid #3C3F41",
                 margin_bottom="6",
             ),
             # Built-in regions
@@ -1600,14 +2080,179 @@ def regions_page() -> rx.Component:
                 border="1px solid #3C3F41",
                 background="#2B2B2B",
             ),
+            # Footer
+            rx.divider(margin_top="8", border_color="#00D9FF", opacity="0.3"),
+            rx.center(
+                rx.hstack(
+                    rx.text("⚡", size="2", color="#00D9FF"),
+                    rx.text(
+                        "RAYDEN RULES™",
+                        size="2",
+                        weight="bold",
+                        color="#00D9FF",
+                        font_family="'Rajdhani', sans-serif",
+                        letter_spacing="0.1em",
+                    ),
+                    rx.text("|", size="2", color="#666"),
+                    rx.text(
+                        "Climate Risk Intelligence Platform",
+                        size="2",
+                        color="#999",
+                        font_family="'Rajdhani', sans-serif",
+                    ),
+                    rx.text("|", size="2", color="#666"),
+                    rx.text(
+                        "© 2025",
+                        size="2",
+                        color="#666",
+                        font_family="'Rajdhani', sans-serif",
+                    ),
+                    rx.text("⚡", size="2", color="#00D9FF"),
+                    spacing="2",
+                    align_items="center",
+                ),
+                padding_y="4",
+            ),
             spacing="5",
             padding="8",
-            max_width="1200px",
+            max_width="1400px",
             margin="0 auto",
         ),
         width="100%",
         background="#1E1E1E",
         min_height="100vh",
+    )
+
+
+def music_player() -> rx.Component:
+    """Floating music player for background music - Death Stranding themed."""
+    return rx.html(
+        """
+        <script>
+            // Initialize persistent audio element and state
+            if (!window.persistentAudio) {
+                window.persistentAudio = new Audio('/dont_be_so_serious.mp3');
+                window.persistentAudio.loop = true;
+                window.persistentAudio.preload = 'auto';
+                window.persistentAudio.volume = 0.7;
+                console.log('🎵 Persistent audio initialized');
+            }
+        </script>
+
+        <div id="music-player" style="
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 2px solid #00D9FF;
+            box-shadow: 0 4px 20px rgba(0, 217, 255, 0.4);
+            width: 300px;
+            z-index: 1000;
+            transition: all 0.3s ease-in-out;
+        "
+        onmouseenter="this.style.boxShadow='0 6px 25px rgba(0, 217, 255, 0.6)'; this.style.transform='translateY(-2px)';"
+        onmouseleave="this.style.boxShadow='0 4px 20px rgba(0, 217, 255, 0.4)'; this.style.transform='translateY(0)';"
+        >
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span id="music-icon" style="
+                    font-size: 24px;
+                    color: #00D9FF;
+                    text-shadow: 0 0 10px #00D9FF;
+                ">♪</span>
+
+                <div style="flex-grow: 1;">
+                    <div style="
+                        font-size: 11px;
+                        font-weight: 600;
+                        color: #D4D4D4;
+                        font-family: 'Inter', sans-serif;
+                    ">Don't Be So Serious</div>
+                    <div style="
+                        font-size: 10px;
+                        color: #A9B7C6;
+                        font-family: 'Inter', sans-serif;
+                    ">Death Stranding OST</div>
+                </div>
+
+                <button
+                    id="music-toggle-btn"
+                    style="
+                        background-color: rgba(0, 217, 255, 0.15);
+                        color: #00D9FF;
+                        border: 1px solid rgba(0, 217, 255, 0.3);
+                        padding: 6px 12px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 16px;
+                        transition: all 0.2s;
+                    "
+                    onmouseover="this.style.backgroundColor='rgba(0, 217, 255, 0.25)';"
+                    onmouseout="this.style.backgroundColor='rgba(0, 217, 255, 0.15)';"
+                    onclick="
+                        // Initialize audio if not exists
+                        if (!window.persistentAudio) {
+                            window.persistentAudio = new Audio('/dont_be_so_serious.mp3');
+                            window.persistentAudio.loop = true;
+                            window.persistentAudio.preload = 'auto';
+                            window.persistentAudio.volume = 0.7;
+                            console.log('🎵 Audio initialized on click');
+                        }
+
+                        const audio = window.persistentAudio;
+                        const btn = document.getElementById('music-toggle-btn');
+                        const icon = document.getElementById('music-icon');
+
+                        if (audio && audio.paused) {
+                            audio.play().then(() => {
+                                btn.innerHTML = '⏸';
+                                icon.innerHTML = '♫';
+                                icon.style.animation = 'pulse-music 1.5s ease-in-out infinite';
+                                console.log('✓ Music playing');
+                            }).catch(e => {
+                                console.error('✗ Audio play failed:', e.message);
+                                alert('Could not play audio: ' + e.message);
+                            });
+                        } else if (audio) {
+                            audio.pause();
+                            btn.innerHTML = '▶';
+                            icon.innerHTML = '♪';
+                            icon.style.animation = 'none';
+                            console.log('⏸ Music paused');
+                        }
+                    "
+                >▶</button>
+            </div>
+
+            <script>
+                // Sync UI with current audio state on page load
+                (function() {
+                    setTimeout(() => {
+                        const audio = window.persistentAudio;
+                        const btn = document.getElementById('music-toggle-btn');
+                        const icon = document.getElementById('music-icon');
+
+                        if (audio && btn && icon && !audio.paused) {
+                            btn.innerHTML = '⏸';
+                            icon.innerHTML = '♫';
+                            icon.style.animation = 'pulse-music 1.5s ease-in-out infinite';
+                            console.log('🎵 Music player synced - playing');
+                        } else if (!audio) {
+                            console.log('🎵 Audio not initialized yet - will init on first click');
+                        }
+                    }, 100);
+                })();
+            </script>
+
+            <style>
+                @keyframes pulse-music {
+                    0%, 100% { opacity: 1; transform: scale(1); }
+                    50% { opacity: 0.7; transform: scale(1.1); }
+                }
+            </style>
+        </div>
+        """
     )
 
 
@@ -1801,20 +2446,20 @@ app = rx.App(
 
 # Add pages
 app.add_page(
-    lambda: rx.box(navbar(), index_page()),
+    lambda: rx.fragment(navbar(), index_page(), music_player()),
     route="/",
     title="⚡ Rayden Rules - Dashboard",
     on_load=State.on_load,
 )
 
 app.add_page(
-    lambda: rx.box(navbar(), alerts_page()),
+    lambda: rx.fragment(navbar(), alerts_page(), music_player()),
     route="/alerts",
     title="⚡ Rayden Rules - Alerts",
 )
 
 app.add_page(
-    lambda: rx.box(navbar(), regions_page()),
+    lambda: rx.fragment(navbar(), regions_page(), music_player()),
     route="/regions",
     title="⚡ Rayden Rules - Regions",
 )
